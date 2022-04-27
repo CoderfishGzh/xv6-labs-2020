@@ -6,6 +6,11 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
+
+uint64 num_of_unused();
+int num_of_free_memory();
+
 
 uint64
 sys_exit(void)
@@ -72,6 +77,51 @@ sys_sleep(void)
   release(&tickslock);
   return 0;
 }
+
+uint64
+sys_trace(void) {
+  
+  //mask 是一个32位的整数，10进制
+  int mask;
+  if(argint(0, &mask) < 0) 
+    return -1;
+  //将mask转换为 2进制，
+  //将mask 记录在 pcb里面的 mask数组
+  
+  int idx = 0;
+  
+  while(mask / 2) {
+    myproc()->masks[idx++] = mask % 2;
+    mask /= 2;
+  }
+  myproc()->masks[idx++] = mask % 2;
+  return 0;
+}
+
+//打印系统信息
+uint64
+sys_sysinfo(void) {
+
+  //获取函数的参数
+  uint64 p;
+  struct sysinfo si;
+
+  if(argaddr(0, &p) < 0) {
+    return -1;
+  }
+
+  uint64 poccess_num = num_of_unused();
+  uint64 free_byte_num = num_of_free_memory() * 4096;
+  printf("%d---------\n", free_byte_num);
+  struct proc *pcb = myproc();
+  si.freemem = free_byte_num;
+  si.nproc = poccess_num;
+  if(copyout(pcb->pagetable, p, (char*)&si, sizeof(si)) < 0)
+    return -1;
+  
+  return 0;
+}
+
 
 uint64
 sys_kill(void)

@@ -104,6 +104,8 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_trace(void);
+extern uint64 sys_sysinfo(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -127,6 +129,34 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
+[SYS_sysinfo]    sys_sysinfo,
+};
+
+static char* sys_call_name[] = {
+  "null",
+  "fork",
+  "exit",
+  "wait",
+  "pipe",
+  "read",
+  "kill",
+  "exec",
+  "fstat",
+  "chdir",
+  "dup",
+  "getpid",
+  "sbrk",
+  "sleep",
+  "uptime",
+  "open",
+  "write",
+  "mknod",
+  "unlink",
+  "link",
+  "mkdir",
+  "close",
+  "trace",
 };
 
 void
@@ -134,7 +164,7 @@ syscall(void)
 {
   int num;
   struct proc *p = myproc();
-
+  //取出 a7寄存器的 值， 该值表示调用的是那个系统调用
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
@@ -143,4 +173,14 @@ syscall(void)
             p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
+
+  //判断这个系统调用没有做标识
+  if(p->masks[num] == 1) {
+    //获取返回值，调用系统调用的pid
+    int ret = p->trapframe->a0;
+    int sys_call_pid = p->pid;
+    //每次系统调用完，则打印指定的输出内容
+    printf("%d: syscall %s -> %d\n", sys_call_pid, sys_call_name[num], ret);
+  }
+
 }

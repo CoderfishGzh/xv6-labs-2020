@@ -85,6 +85,20 @@ allocpid() {
   return pid;
 }
 
+//return the nums of not UNUSED process
+uint64 
+num_of_unused() {
+  struct proc *p;
+  int num = 0;
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if(p->state != UNUSED) {
+      num++;
+    }
+  }
+  return num;
+} 
+
+
 // Look in the process table for an UNUSED proc.
 // If found, initialize state required to run in the kernel,
 // and return with p->lock held.
@@ -274,6 +288,11 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
+  
+  //save the parent mask form pcb
+  for(int i = 0; i < 32; ++i) {
+    np->masks[i] = p->masks[i];
+  }
 
   np->parent = p;
 
