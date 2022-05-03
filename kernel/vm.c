@@ -289,6 +289,32 @@ freewalk(pagetable_t pagetable)
   kfree((void*)pagetable);
 }
 
+static char* print_star[] = {
+  [0] = "..",
+  [1] = ".. ..",
+  [2] = ".. .. ..",
+};
+
+void 
+vmprint(pagetable_t pagetable, int idx) {
+
+  if(idx == 0) {
+    printf("page table %p\n", pagetable);
+  }
+  if(idx > 2) return;
+
+  char* buf = print_star[idx];
+
+  for(int i = 0; i < 512; i++) {
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V) {
+      printf("%s%d: pte %p pa %p\n", buf, i, pte, PTE2PA(pte));
+      vmprint((pagetable_t)PTE2PA(pte), idx + 1);
+    }
+  }
+  return;
+}
+
 // Free user memory pages,
 // then free page-table pages.
 void
@@ -441,7 +467,3 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   }
 }
 
-void 
-vmprint(pagetable_t pagetable) {
-  
-}
