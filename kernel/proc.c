@@ -121,6 +121,15 @@ found:
     return 0;
   }
 
+  // 创建内核页表
+  p->pagetable_Ke = User_kvminit();
+  if(p->pagetable_Ke == 0){
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+
+
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));

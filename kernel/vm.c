@@ -51,13 +51,13 @@ void
 User_kvmmap(pagetable_t page, uint64 va, uint64 pa, uint64 sz, int perm)
 {
   if(mappages(page, va, sz, pa, perm) != 0)
-    panic("kvmmap");
+    panic("User_kvmmap");
 }
 
 pagetable_t
 User_kvminit() {
   pagetable_t page = (pagetable_t) kalloc();
-  memset(kernel_pagetable, 0, PGSIZE);
+  memset(page, 0, PGSIZE);
 
   // uart registers
   User_kvmmap(page, UART0, UART0, PGSIZE, PTE_R | PTE_W);
