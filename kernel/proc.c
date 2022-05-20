@@ -494,6 +494,11 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+
+        w_satp(MAKE_SATP(p->pagetable_Ke));
+        sfence_vma();
+
+
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
@@ -507,6 +512,7 @@ scheduler(void)
 #if !defined (LAB_FS)
     if(found == 0) {
       intr_on();
+      kvminithart();
       asm volatile("wfi");
     }
 #else
