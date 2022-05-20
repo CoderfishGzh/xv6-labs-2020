@@ -34,14 +34,21 @@ procinit(void)
       // Allocate a page for the process's kernel stack.
       // Map it high in memory, followed by an invalid
       // guard page.
-      char *pa = kalloc();
-      if(pa == 0)
+      // char *pa = kalloc();
+      // if(pa == 0)
+      //   panic("kalloc");
+      // uint64 va = KSTACK((int) (p - proc));
+      // kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
+      // p->kstack = va;
+
+      char* pa;
+      if(pa == 0) 
         panic("kalloc");
-      uint64 va = KSTACK((int) (p - proc));
-      kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
-      p->kstack = va;
+      p->kstack = (uint64)pa;
   }
-  kvminithart();
+  // 此处将 全局内核页表推到stap寄存器里面
+  // 由于这里要将进程的内核页表放到stap，因此这里先不调用
+  // kvminithart();
 }
 
 // Must be called with interrupts disabled,
@@ -128,6 +135,11 @@ found:
     release(&p->lock);
     return 0;
   }
+
+  // 内核栈映射
+  uint64 va = KSTACK((int) (p - proc));
+  kvmmap(va, p->kstack, PGSIZE, PTE_R | PTE_W);
+  p->kstack = va;
 
 
   // Set up new context to start executing at forkret,
