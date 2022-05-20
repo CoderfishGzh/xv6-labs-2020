@@ -41,14 +41,14 @@ procinit(void)
       // kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
       // p->kstack = va;
 
-      char* pa;
+      char* pa = kalloc();
       if(pa == 0) 
         panic("kalloc");
       p->kstack = (uint64)pa;
   }
   // 此处将 全局内核页表推到stap寄存器里面
   // 由于这里要将进程的内核页表放到stap，因此这里先不调用
-  // kvminithart();
+  kvminithart();
 }
 
 // Must be called with interrupts disabled,
@@ -170,6 +170,20 @@ freeproc(struct proc *p)
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
+  
+
+  if(p->kstack) {
+    uvmunmap(p->pagetable_Ke, p->kstack, 1, 1);
+  }
+
+  p->kstack = 0;
+
+  // 释放内核页表
+  if(p->pagetable_Ke)
+    User_freewalk(p->pagetable_Ke, 2);
+
+  p->pagetable_Ke = 0;
+
   p->state = UNUSED;
 }
 
