@@ -5,6 +5,8 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
+#include "proc.h"
 
 /*
  * the kernel's page table.
@@ -169,7 +171,8 @@ kvmpa(uint64 va)
   pte_t *pte;
   uint64 pa;
   
-  pte = walk(kernel_pagetable, va, 0);
+  // pte = walk(kernel_pagetable, va, 0);
+  pte = walk(myproc()->pagetable_Ke, va, 0);
   if(pte == 0)
     panic("kvmpa");
   if((*pte & PTE_V) == 0)
@@ -329,7 +332,7 @@ freewalk(pagetable_t pagetable)
 void 
 User_freewalk(pagetable_t page, int idx) {
 
-  if(idx == 0) {
+  if(idx > 2) {
     return;
   }
 
@@ -339,7 +342,7 @@ User_freewalk(pagetable_t page, int idx) {
     if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
       // this PTE points to a lower-level page table.
       uint64 child = PTE2PA(pte);
-      User_freewalk((pagetable_t)child, idx--);
+      User_freewalk((pagetable_t)child, idx + 1);
       page[i] = 0;
     } 
     // else if(pte & PTE_V){

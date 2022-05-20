@@ -18,6 +18,8 @@ struct spinlock pid_lock;
 extern void forkret(void);
 static void wakeup1(struct proc *chan);
 static void freeproc(struct proc *p);
+void User_kvmmap(pagetable_t page, uint64 va, uint64 pa, uint64 sz, int perm);
+pte_t * walk(pagetable_t pagetable, uint64 va, int alloc);
 
 extern char trampoline[]; // trampoline.S
 
@@ -41,10 +43,10 @@ procinit(void)
       // kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
       // p->kstack = va;
 
-      char* pa = kalloc();
-      if(pa == 0) 
-        panic("kalloc");
-      p->kstack = (uint64)pa;
+      // char* pa = kalloc();
+      // if(pa == 0) 
+      //   panic("kalloc");
+      // p->kstack = (uint64)pa;
   }
   // 此处将 全局内核页表推到stap寄存器里面
   // 由于这里要将进程的内核页表放到stap，因此这里先不调用
@@ -136,10 +138,19 @@ found:
     return 0;
   }
 
-  // 内核栈映射
+  char *pa = kalloc();
+  if(pa == 0)
+    panic("kalloc");
   uint64 va = KSTACK((int) (p - proc));
-  kvmmap(va, p->kstack, PGSIZE, PTE_R | PTE_W);
+  // kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
+  User_kvmmap(p->pagetable_Ke, va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
   p->kstack = va;
+
+
+  // // 内核栈映射
+  // uint64 va = KSTACK((int) (p - proc));
+  // User_kvmmap(p->pagetable_Ke, va, p->kstack, PGSIZE, PTE_R | PTE_W);
+  // p->kstack = va;
 
 
   // Set up new context to start executing at forkret,
@@ -172,15 +183,24 @@ freeproc(struct proc *p)
   p->xstate = 0;
   
 
-  if(p->kstack) {
-    uvmunmap(p->pagetable_Ke, p->kstack, 1, 1);
-  }
+  // if(p->kstack) {
+  //   uvmunmap(p->pagetable_Ke, p->kstack, 1, 1);
+  // }
 
+  // p->kstack = 0;
+
+ if (p->kstack)
+  {
+    pte_t* pte = walk(p->pagetable_Ke, p->kstack, 0);
+    if(pte == 0)
+      panic("freeproc: kstack");
+    kfree((void*)PTE2PA(*pte));
+  }
   p->kstack = 0;
 
   // 释放内核页表
   if(p->pagetable_Ke)
-    User_freewalk(p->pagetable_Ke, 2);
+    User_freewalk(p->pagetable_Ke, 0);
 
   p->pagetable_Ke = 0;
 
