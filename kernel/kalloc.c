@@ -47,7 +47,7 @@ void
 kfree(void *pa)
 {
   struct run *r;
-
+  // 确认pa是一个4096字节的页面，且在指定的范围内，否者抛出异常
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
@@ -57,6 +57,8 @@ kfree(void *pa)
   r = (struct run*)pa;
 
   acquire(&kmem.lock);
+  // 将r插入到freelist链表的头部
+  // 此时，freelist维护的是一个链表，其中的每个节点都是一个空闲的物理页面
   r->next = kmem.freelist;
   kmem.freelist = r;
   release(&kmem.lock);
