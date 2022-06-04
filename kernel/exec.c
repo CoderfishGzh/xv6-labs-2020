@@ -75,6 +75,10 @@ exec(char *path, char **argv)
   sp = sz;
   stackbase = sp - PGSIZE;
 
+  // 把用户页表映射到内核页表
+  userpg2kerpg(pagetable, p->pagetable_Ke, 0, sz);
+
+
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
@@ -115,6 +119,8 @@ exec(char *path, char **argv)
   p->trapframe->epc = elf.entry;  // initial program counter = main
   p->trapframe->sp = sp; // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
+
+
 
   if(p->pid==1) 
     vmprint(p->pagetable, 0);

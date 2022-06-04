@@ -162,6 +162,7 @@ void            uartputc_sync(int);
 int             uartgetc(void);
 
 // vm.c
+void            userpg2kerpg(pagetable_t userpg, pagetable_t kerpg, uint64 oldsz, uint64 newsz);
 void            User_freewalk(pagetable_t page, int idx);
 pagetable_t     User_kvminit(void);
 void            kvminit(void);

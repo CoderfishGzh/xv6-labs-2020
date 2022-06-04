@@ -276,7 +276,7 @@ userinit(void)
   // 分配一个用户页，并将init的指令和数据复制到它
   uvminit(p->pagetable, initcode, sizeof(initcode));
   p->sz = PGSIZE;
-
+  userpg2kerpg(p->pagetable, p->pagetable_Ke, 0, p->sz);
   // prepare for the very first "return" from kernel to user.
   p->trapframe->epc = 0;      // user program counter
   p->trapframe->sp = PGSIZE;  // user stack pointer
@@ -299,11 +299,19 @@ growproc(int n)
 
   sz = p->sz;
   if(n > 0){
+     if (PGROUNDUP(sz + n) >= PLIC)
+      return -1;
     if((sz = uvmalloc(p->pagetable, sz, sz + n)) == 0) {
       return -1;
     }
+     // 将新的内存，从用户页表中映射到内核页表中
+    userpg2kerpg(p->pagetable, p->pagetable_Ke, sz - n, sz);
   } else if(n < 0){
     sz = uvmdealloc(p->pagetable, sz, sz + n);
+
+  //   if (n >= PGSIZE) {  // 我不知道为什么这样 if，反正不写会 panic
+	// 	uvmunmap(p->pagetable_Ke, PGROUNDUP(sz), n/PGSIZE, 0);
+	// }
   }
   p->sz = sz;
   return 0;
@@ -335,6 +343,9 @@ fork(void)
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+
+  // 把用户页表映射到内核页表
+  userpg2kerpg(np->pagetable, np->pagetable_Ke, 0, np->sz);
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;

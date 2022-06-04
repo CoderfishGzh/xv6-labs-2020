@@ -544,20 +544,27 @@ userpg2kerpg(pagetable_t userpg, pagetable_t kerpg, uint64 oldsz, uint64 newsz) 
     panic("userpg2kerpg: oldsz > newsz");
   }
   // 将oldsz转换成va
-  uint64 va = PGROUNDDOWN(oldsz);
 
-  for(va; va < newsz; va += PGSIZE) {
+  uint64 a;
+  oldsz = PGROUNDUP(oldsz);
+  for (a = oldsz; a < newsz; a += PGSIZE) {
     // 得到用户页表中的页表项
-    pte_t *upte = walk(userpg, va, 0);
+    pte_t *upte = walk(userpg, a, 0);
     if(upte == 0) {
       panic("userpg2kerpg: upte should exist");
     }
-    pte_t *kpte = walk(kerpg, va, 1);
+    pte_t *kpte = walk(kerpg, a, 1);
     if(kpte == 0) {
       panic("userpg2kerpg: kpte should exist");
     }
     // 将用户页表中的页表项拷贝到内核页表中
-    *kpte = *upte;
-    *kpte & ~PTE_U;
+    // *kpte = (*upte) & (~PTE_U);
+
+    // uint64 pa = PTE2PA(*upte);
+    // // 清除PTE_U的标记位
+    // uint flags = (PTE_FLAGS(*upte) & (~PTE_U));
+    // *kpte = PA2PTE(pa) | flags;
+
+    *kpte = (*upte) & (~PTE_U);
   } 
 }
