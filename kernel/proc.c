@@ -273,6 +273,7 @@ userinit(void)
   
   // allocate one user page and copy init's instructions
   // and data into it.
+  // 分配一个用户页，并将init的指令和数据复制到它
   uvminit(p->pagetable, initcode, sizeof(initcode));
   p->sz = PGSIZE;
 

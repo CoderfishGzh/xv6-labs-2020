@@ -26,13 +26,18 @@ statscopyin(char *buf, int sz) {
 // Copy from user to kernel.
 // Copy len bytes to dst from virtual address srcva in a given page table.
 // Return 0 on success, -1 on error.
+// 从用户拷贝到内核。
+// 从给定页表的虚拟地址 srcva 拷贝 len 字节到 dst。
+// 成功时返回0，错误时返回1。
 int
 copyin_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 {
+  // 新建一个proc
   struct proc *p = myproc();
-
+  // 判断虚拟地址是否在范围内
   if (srcva >= p->sz || srcva+len >= p->sz || srcva+len < srcva)
     return -1;
+  // 把从srcva的len个字节复制到dst上
   memmove((void *) dst, (void *)srcva, len);
   stats.ncopyin++;   // XXX lock
   return 0;

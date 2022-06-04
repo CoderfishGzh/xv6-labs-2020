@@ -535,3 +535,29 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   // }
 }
 
+// 把用户页表映射到内核页表
+// 从oldsz到oldsz的内存拷贝到用户页表中
+void 
+userpg2kerpg(pagetable_t userpg, pagetable_t kerpg, uint64 oldsz, uint64 newsz) {
+  // 判断oldsz是否大于newsz
+  if(oldsz > newsz) {
+    panic("userpg2kerpg: oldsz > newsz");
+  }
+  // 将oldsz转换成va
+  uint64 va = PGROUNDDOWN(oldsz);
+
+  for(va; va < newsz; va += PGSIZE) {
+    // 得到用户页表中的页表项
+    pte_t *upte = walk(userpg, va, 0);
+    if(upte == 0) {
+      panic("userpg2kerpg: upte should exist");
+    }
+    pte_t *kpte = walk(kerpg, va, 1);
+    if(kpte == 0) {
+      panic("userpg2kerpg: kpte should exist");
+    }
+    // 将用户页表中的页表项拷贝到内核页表中
+    *kpte = *upte;
+    *kpte & ~PTE_U;
+  } 
+}
