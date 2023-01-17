@@ -26,6 +26,8 @@ trapinit(void)
 void
 trapinithart(void)
 {
+  // 现在处于内核
+  // 将kernel vel 放到 stvec里面
   w_stvec((uint64)kernelvec);
 }
 
@@ -43,25 +45,33 @@ usertrap(void)
 
   // send interrupts and exceptions to kerneltrap(),
   // since we're now in the kernel.
+  // 将stvec的内容 改变成为 kernel的内容， 专门处理内核的trap
+  // 现在处于 内核状态下，将stvec改成内核vec，因为，如果在内核状态下 发生 trap的话，就要进行内核的trap处理
   w_stvec((uint64)kernelvec);
 
+  // 获取当前运行的程序，即获取其proc
   struct proc *p = myproc();
   
   // save user program counter.
+  // 保存sepc，sepc的值是在trap时，将pc值放到sepc里面
+  // 但是，在usertrap()时，仍有可能发生进程上下文切换，导致 sepc被复写，导致丢失了 pc值
   p->trapframe->epc = r_sepc();
   
   if(r_scause() == 8){
     // system call
-
+    // 系统调用
     if(p->killed)
       exit(-1);
 
     // sepc points to the ecall instruction,
     // but we want to return to the next instruction.
+    // 系统调用保存pc的值，保存的是ecall的值，所以要加上4,
+    // 到返回用户空间后，才调用系统调用后面的一条命令
+    // 加4 是因为该系统是32位的系统
     p->trapframe->epc += 4;
-
-    // an interrupt will change sstatus &c registers,
-    // so don't enable until done with those registers.
+    //中断将改变 sstatus &c 寄存器，
+    //所以在完成这些寄存器之前不要启用。
+    // 显式打开中断
     intr_on();
 
     syscall();
@@ -86,6 +96,7 @@ usertrap(void)
 //
 // return to user space
 //
+// 返回 user space 需要做的事情
 void
 usertrapret(void)
 {
@@ -97,6 +108,7 @@ usertrapret(void)
   intr_off();
 
   // send syscalls, interrupts, and exceptions to trampoline.S
+  // 设置stvec指向 trampoline 中 sret 指令的代码
   w_stvec(TRAMPOLINE + (uservec - trampoline));
 
   // set up trapframe values that uservec will need when
@@ -111,11 +123,15 @@ usertrapret(void)
   
   // set S Previous Privilege mode to User.
   unsigned long x = r_sstatus();
+  // 将SPP位置0,表示返回用户mode
   x &= ~SSTATUS_SPP; // clear SPP to 0 for user mode
+  // 将 SPIE位置1,设置成可以进行中断
   x |= SSTATUS_SPIE; // enable interrupts in user mode
+  // 将x写回sstatus
   w_sstatus(x);
 
   // set S Exception Program Counter to the saved user pc.
+  // 将pc值复制到sepc里面
   w_sepc(p->trapframe->epc);
 
   // tell trampoline.S the user page table to switch to.
@@ -124,6 +140,7 @@ usertrapret(void)
   // jump to trampoline.S at the top of memory, which 
   // switches to the user page table, restores user registers,
   // and switches to user mode with sret.
+  // 这里是sret的地址
   uint64 fn = TRAMPOLINE + (userret - trampoline);
   ((void (*)(uint64,uint64))fn)(TRAPFRAME, satp);
 }

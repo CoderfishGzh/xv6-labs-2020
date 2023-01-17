@@ -15,6 +15,7 @@ trampoline:
 .globl uservec
 uservec:    
 	#
+        # 
         # trap.c sets stvec to point here, so
         # traps from user space start here,
         # in supervisor mode, but with a
@@ -29,6 +30,9 @@ uservec:
         csrrw a0, sscratch, a0
 
         # save the user registers in TRAPFRAME
+        # 保存程序执行时，用户使用的寄存器
+        # sd: 将左边保存到右边
+        # 40(a0) 是 a0 的偏移了40位
         sd ra, 40(a0)
         sd sp, 48(a0)
         sd gp, 56(a0)
@@ -38,6 +42,8 @@ uservec:
         sd t2, 88(a0)
         sd s0, 96(a0)
         sd s1, 104(a0)
+        # 此处还没有保存 a0, 因为此时的a0已经是trapframe了
+        # 真正的a0 保存在sscratch里面
         sd a1, 120(a0)
         sd a2, 128(a0)
         sd a3, 136(a0)
@@ -61,7 +67,9 @@ uservec:
         sd t6, 280(a0)
 
 	# save the user a0 in p->trapframe->a0
+        # 将t0 与 sscratch 交换
         csrr t0, sscratch
+        # 将 a0 保存在 trapframe里面的a0处，即p->trapframe->a0
         sd t0, 112(a0)
 
         # restore kernel stack pointer from p->trapframe->kernel_sp
@@ -71,6 +79,7 @@ uservec:
         ld tp, 32(a0)
 
         # load the address of usertrap(), p->trapframe->kernel_trap
+        # 将 usertrap()函数指针 load到 t0 处
         ld t0, 16(a0)
 
         # restore kernel page table from p->trapframe->kernel_satp
@@ -82,6 +91,8 @@ uservec:
         # table does not specially map p->tf.
 
         # jump to usertrap(), which does not return
+        # 跳转到 t0 处，因为 t0 是 usertrap()函数
+        # 即 执行 usertrap()
         jr t0
 
 .globl userret

@@ -135,7 +135,11 @@ syscall(void)
   int num;
   struct proc *p = myproc();
 
+  // a7 存放着系统调用编号
   num = p->trapframe->a7;
+  // 调用 syscalls[num] 对应的函数
+  // 将返回值写回a0寄存器
+  // risc-V 习惯将返回值存储到 a0
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
   } else {
