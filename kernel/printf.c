@@ -136,7 +136,6 @@ printfinit(void)
 // 回溯跟踪函数
 void 
 backtrace(void) {
-  printf("backtrace\n");
 
   // get fp 
   uint64 fp = r_fp();
