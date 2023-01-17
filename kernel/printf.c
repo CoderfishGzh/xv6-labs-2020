@@ -140,11 +140,6 @@ backtrace(void) {
 
   // get fp 
   uint64 fp = r_fp();
-  uint64* frame = (uint64*) fp;
-
-  printf("fp: %p\n", fp);
-  printf("return address: %p\n", frame[-1]);
-  printf("prev fp address: %p\n", frame[-2]);
 
   // stack 大小
   uint64 stack_up = PGROUNDUP(fp);
@@ -152,19 +147,18 @@ backtrace(void) {
 
   // 遍历 stack 里面的 stack frame
   while(1) {
+    // 当fp超出范围退出循环
+    if(fp >= stack_up || fp <= stack_down) {
+      break;
+    }
 
     // 获取栈帧
     uint64* frame = (uint64*) fp;
-
-    // 当fp超出范围退出循环
-    if(*frame > stack_up || *frame < stack_down) {
-      break;
-    }
 
     // 获取 return address 
     printf("%p\n", frame[-1]);
 
     // 重置fp
-    *frame = frame[-2];
+    fp = (uint64) frame[-2];
   }
 }
