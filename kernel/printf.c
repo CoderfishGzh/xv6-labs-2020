@@ -145,4 +145,29 @@ backtrace(void) {
   printf("fp: %p\n", fp);
   printf("return address: %p\n", frame[-1]);
   printf("prev fp address: %p\n", frame[-2]);
+
+  // stack 大小
+  uint64 stack_up = PGROUNDUP(fp);
+  uint64 stack_down = PGROUNDDOWN(fp);
+
+  // 遍历 stack 里面的 stack frame
+  while(1) {
+    // 当fp超出范围退出循环
+    if(fp > stack_up || fp < stack_down) {
+      break;
+    }
+
+    // 获取栈帧
+    uint64* frame = (uint64*) fp;
+
+    // 获取 return address 
+    uint64* return_address = frame[-1];
+    printf("%s\n", return_address);
+
+    // 获取 prev stack frame
+    uint64* prev_sf = frame[-2];
+
+    // 重置fp
+    fp = *prev_sf;
+  }
 }
