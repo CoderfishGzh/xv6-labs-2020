@@ -165,6 +165,6 @@ backtrace(void) {
     printf("%p\n", frame[-1]);
 
     // 重置fp
-    frame = frame[-2];
+    *frame = frame[-2];
   }
 }
