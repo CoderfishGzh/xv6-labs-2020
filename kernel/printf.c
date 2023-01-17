@@ -132,3 +132,17 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+// 回溯跟踪函数
+void 
+backtrace(void) {
+  printf("backtrace\n");
+
+  // get fp 
+  uint64 fp = r_fp();
+  uint64* frame = (uint64*) fp;
+
+  printf("fp: %p\n", fp);
+  printf("return address: %p\n", frame[-1]);
+  printf("prev fp address: %p\n", frame[-2]);
+}
