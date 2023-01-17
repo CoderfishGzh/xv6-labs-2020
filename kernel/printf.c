@@ -161,13 +161,9 @@ backtrace(void) {
     uint64* frame = (uint64*) fp;
 
     // 获取 return address 
-    uint64* return_address = frame[-1];
-    printf("%s\n", return_address);
-
-    // 获取 prev stack frame
-    uint64* prev_sf = frame[-2];
+    printf("%p\n", frame[-1]);
 
     // 重置fp
-    fp = *prev_sf;
+    fp = (uint64) frame[-2];
   }
 }
