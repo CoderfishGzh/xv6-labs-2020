@@ -104,7 +104,7 @@ uint64
 sys_sigalarm(void) {
   struct proc *p = myproc();
 
-  uint64 alarm_interval;
+  int alarm_interval;
   uint64 handler;
 
   argint(0, &alarm_interval);
