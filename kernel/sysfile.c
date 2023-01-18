@@ -484,28 +484,3 @@ sys_pipe(void)
   }
   return 0;
 }
-
-// 设置 alarm 时间以及处理 fn
-// 将报警间隔以及处理程序函数的指针存储在 proc 里面
-uint64 
-sys_sigalarm(void) {
-  // 获取当前程序的proc指针
-  struct proc *p = myproc();
-  // 获取调用该函数的参数
-  // 怎么获取函数的参数
-  uint64 alarm_interval;
-  void* handler();
-
-  argint(0, &alarm_interval);
-  argaddr(1, handler);
-
-  printf("interval: %d\n", alarm_interval);
-
-  return 0;
-}
-
-uint64 
-sys_sigreturn(void) {
-
-  return 0;
-}

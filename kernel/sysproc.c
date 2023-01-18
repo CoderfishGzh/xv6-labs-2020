@@ -96,3 +96,28 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+
+// 设置 alarm 时间以及处理 fn
+// 将报警间隔以及处理程序函数的指针存储在 proc 里面
+uint64 
+sys_sigalarm(void) {
+  struct proc *p = myproc();
+
+  uint64 alarm_interval;
+  uint64 handler;
+
+  argint(0, &alarm_interval);
+  argaddr(1, &handler);
+
+  p->alarm_interval = alarm_interval;
+  p->handler = handler;  
+
+  return 0;
+}
+
+uint64 
+sys_sigreturn(void) {
+
+  return 0;
+}

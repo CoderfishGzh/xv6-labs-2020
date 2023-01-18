@@ -104,7 +104,7 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   uint64 alarm_interval;       // 警报间隔
-  void(*hander)() alarm_handler;        // alarm 处理函数
+  uint64 handler;            // alarm 处理函数
   // 自上一次调用到进程的alarm fn经历了多少滴答
   uint64 interval_from_prev_alarm;
 };
