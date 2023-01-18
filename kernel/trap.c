@@ -97,10 +97,12 @@ usertrap(void)
       // 保存相关的寄存器
       memmove(p->alarm_trapframe, p->trapframe, PGSIZE);
 
-      if(p->interval_from_prev_alarm >= p->alarm_interval && p->handler_exec == 0) {
-        p->handler_exec = 1;
-        p->trapframe->epc = p->handler;
-      }
+      if(p->interval_from_prev_alarm >= p->alarm_interval) {
+        if(p->handler_exec == 0) {
+          p->handler_exec = 1;
+          p->trapframe->epc = p->handler;
+        }
+     }
     }
 
     yield();
