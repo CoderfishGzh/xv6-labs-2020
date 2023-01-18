@@ -111,8 +111,7 @@ sys_sigalarm(void) {
   argaddr(1, &handler);
 
   p->alarm_interval = alarm_interval;
-  p->handler = handler;
-  p->handler_exec = 0;  
+  p->handler = handler; 
 
   return 0;
 }

@@ -94,12 +94,13 @@ usertrap(void)
       // 进行滴答计时
       p->interval_from_prev_alarm++;
 
-      // 保存相关的寄存器
-      memmove(p->alarm_trapframe, p->trapframe, sizeof(struct trapframe));
+      
       // 符合规定可以执行
       if(p->interval_from_prev_alarm >= p->alarm_interval && p->handler_exec == 0) {
           p->trapframe->epc = p->handler;
           p->handler_exec = 1;
+          // 保存相关的寄存器
+          memmove(p->alarm_trapframe, p->trapframe, sizeof(struct trapframe));
           p->interval_from_prev_alarm = 0;
      }
     }
