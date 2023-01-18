@@ -120,7 +120,7 @@ uint64
 sys_sigreturn(void) {
   struct proc *p = myproc();
 
-  memcmp(p->trapframe, p->alarm_trapframe, PGSIZE); 
+  memmove(p->trapframe, p->alarm_trapframe, PGSIZE);
   p->handler_exec = 0;
 
   return 0;

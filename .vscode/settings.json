@@ -32,5 +32,9 @@
     "**/.*/**",
     "**/.vscode",
     "**/.vscode/**"
-  ]
+  ],
+  "files.associations": {
+    "cstring": "c",
+    "variant": "c"
+  }
 }
