@@ -34,6 +34,7 @@ periodic()
 {
   count = count + 1;
   printf("alarm!\n");
+  // alarm 函数结束后，会调用sigreturn函数
   sigreturn();
 }
 
