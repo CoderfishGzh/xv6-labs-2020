@@ -165,7 +165,10 @@ freeproc(struct proc *p)
 if(p->alarm_trapframe)
     kfree((void*)p->alarm_trapframe);
 
-
+p->alarm_interval = 0;
+p->alarm_trapframe = 0;
+p->handler_exec = 0;
+p->handler = 0;
 
 }
 
