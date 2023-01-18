@@ -137,27 +137,19 @@ printfinit(void)
 // 回溯跟踪函数
 void 
 backtrace(void) {
-
   // get fp 
   uint64 fp = r_fp();
 
-  // stack 大小
-  uint64 stack_up = PGROUNDUP(fp);
-  uint64 stack_down = PGROUNDDOWN(fp);
+  // stack page 范围
+  uint64 page_up = PGROUNDUP(fp);
+  uint64 page_down = PGROUNDDOWN(fp);
 
-  // 遍历 stack 里面的 stack frame
-  while(1) {
-    // 当fp超出范围退出循环
-    if(fp >= stack_up || fp <= stack_down) {
-      break;
-    }
-
+  // 遍历 stack page 里面的 stack frame
+  while(fp < page_up && fp > page_down) {
     // 获取栈帧
     uint64* frame = (uint64*) fp;
-
     // 获取 return address 
     printf("%p\n", frame[-1]);
-
     // 重置fp
     fp = (uint64) frame[-2];
   }
