@@ -89,6 +89,7 @@ allocpid() {
 // If found, initialize state required to run in the kernel,
 // and return with p->lock held.
 // If there are no free procs, or a memory allocation fails, return 0.
+// 寻找一个空闲的proc进行分配
 static struct proc*
 allocproc(void)
 {
@@ -127,6 +128,9 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  p->alarm_interval = -1;
+  p->interval_from_prev_alarm = 0;
+  
   return p;
 }
 
