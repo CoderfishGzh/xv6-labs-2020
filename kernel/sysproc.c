@@ -111,7 +111,8 @@ sys_sigalarm(void) {
   argaddr(1, &handler);
 
   p->alarm_interval = alarm_interval;
-  p->handler = handler;  
+  p->handler = handler;
+  p->handler_exec = 0;  
 
   return 0;
 }
@@ -120,6 +121,7 @@ uint64
 sys_sigreturn(void) {
   struct proc *p = myproc();
 
+  // 恢复现场
   memmove(p->trapframe, p->alarm_trapframe, sizeof(struct trapframe));
   p->handler_exec = 0;
   return 0;
