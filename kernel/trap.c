@@ -102,6 +102,7 @@ usertrap(void)
           p->handler_exec = 1;
           p->trapframe->epc = p->handler;
           p->handler_exec = 0;
+          p->interval_from_prev_alarm = 0;
         }
      }
     }
