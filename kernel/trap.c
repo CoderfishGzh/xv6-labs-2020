@@ -95,7 +95,7 @@ usertrap(void)
       p->interval_from_prev_alarm++;
 
       // 保存相关的寄存器
-      memmove(p->alarm_trapframe, p->trapframe, PGSIZE);
+      memmove(p->alarm_trapframe, p->trapframe, sizeof(struct trapframe));
 
       if(p->interval_from_prev_alarm >= p->alarm_interval) {
         if(p->handler_exec == 0) {
