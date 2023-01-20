@@ -77,7 +77,7 @@ usertrap(void)
     }
 
     // 分配物理空间
-    uint64* mem = (uint64)kalloc();
+    uint64 mem = (uint64)kalloc();
     if(mem == 0) {
       printf("fix page fault error: oom\n");
       p->killed = 1;
@@ -88,7 +88,7 @@ usertrap(void)
       uint64 va = PGROUNDDOWN(error_address);
 
       // 在pagetable上，添加新的PTE映射
-      if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
+      if(mappages(p->pagetable, va, PGSIZE, mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
         kfree((void*) mem);
         printf("fix page fault error: create ptes error");
         p->killed = 1;
