@@ -49,7 +49,15 @@ sys_sbrk(void)
   addr = myproc()->sz;
   // if(growproc(n) < 0)
   //   return -1;
-  myproc()->sz = addr + n;
+
+  if(n >= 0) {
+    // 增加的情况
+    myproc()->sz = addr + n;
+  } else {
+    // 减少堆内存
+    myproc()->sz = addr - n;
+  }
+
   return addr;
 }
 

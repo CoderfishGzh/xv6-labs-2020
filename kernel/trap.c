@@ -70,11 +70,17 @@ usertrap(void)
     uint64 error_address = r_stval();
     printf("page fault, error_address: %d\n", error_address);
 
+    // error address > p->sz, 中止进程
+    if(error_address > p->sz) {
+      panic("fix page fault error: error address > p->sz");
+    }
+
     // 分配物理空间
     char* mem = kalloc();
     if(mem == 0) {
-      panic("page fault but oom");
+      panic("fix page fault error: oom");
     }
+
     // 将该page至0
     memset(mem, 0, PGSIZE);
     
