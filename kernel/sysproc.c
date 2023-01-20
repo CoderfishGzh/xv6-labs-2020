@@ -56,8 +56,8 @@ sys_sbrk(void)
   } else {
     // 减少堆内存
     // myproc()->sz = addr - n;
-    uvmdealloc(myproc()->pagetable, addr, addr + n);
-    addr += n;
+    // uvmdealloc(myproc()->pagetable, addr, addr + n);
+    // addr += n;
   }
 
   return addr;
