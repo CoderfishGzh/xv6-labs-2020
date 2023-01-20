@@ -72,24 +72,30 @@ usertrap(void)
 
     // error address > p->sz, 中止进程
     if(error_address > p->sz || error_address < p->stack_sz) {
-      panic("fix page fault error: error address 不在合适的范围内");
+      printf("fix page fault error: error address 不在合适的范围内\n");
+      p->killed = 1;
     }
 
     // 分配物理空间
-    char* mem = kalloc();
+    uint64* mem = (uint64)kalloc();
     if(mem == 0) {
-      panic("fix page fault error: oom");
+      printf("fix page fault error: oom\n");
+      p->killed = 1;
+    } else {
+      // 将该page至0
+      memset(mem, 0, PGSIZE);
+       
+      uint64 va = PGROUNDDOWN(error_address);
+
+      // 在pagetable上，添加新的PTE映射
+      if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
+        kfree((void*) mem);
+        printf("fix page fault error: create ptes error");
+        p->killed = 1;
+      }
     }
 
-    // 将该page至0
-    memset(mem, 0, PGSIZE);
     
-    uint64 va = PGROUNDDOWN(error_address);
-
-    // 在pagetable上，添加新的PTE映射
-    if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
-      panic("fix page fault error: create ptes error");
-    }
 
   } else if((which_dev = devintr()) != 0){
     // ok
