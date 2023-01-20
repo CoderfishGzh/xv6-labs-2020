@@ -221,6 +221,8 @@ userinit(void)
   uvminit(p->pagetable, initcode, sizeof(initcode));
   p->sz = PGSIZE;
 
+  p->stack_sz = PGSIZE;
+
   // prepare for the very first "return" from kernel to user.
   p->trapframe->epc = 0;      // user program counter
   p->trapframe->sp = PGSIZE;  // user stack pointer
@@ -233,8 +235,8 @@ userinit(void)
   release(&p->lock);
 }
 
-// Grow or shrink user memory by n bytes.
-// Return 0 on success, -1 on failure.
+//将用户内存增加或缩小 n 字节。
+//成功返回 0，失败返回 -1。
 int
 growproc(int n)
 {
@@ -263,6 +265,7 @@ fork(void)
   struct proc *p = myproc();
 
   // Allocate process.
+  // 分配一个子proc
   if((np = allocproc()) == 0){
     return -1;
   }
@@ -283,7 +286,7 @@ fork(void)
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
 
-  // increment reference counts on open file descriptors.
+  //增加打开文件描述符的引用计数。
   for(i = 0; i < NOFILE; i++)
     if(p->ofile[i])
       np->ofile[i] = filedup(p->ofile[i]);

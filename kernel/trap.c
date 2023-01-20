@@ -71,8 +71,8 @@ usertrap(void)
     printf("page fault, error_address: %d\n", error_address);
 
     // error address > p->sz, 中止进程
-    if(error_address > p->sz) {
-      panic("fix page fault error: error address > p->sz");
+    if(error_address > p->sz || error_address < p->stack_sz) {
+      panic("fix page fault error: error address 不在合适的范围内");
     }
 
     // 分配物理空间
