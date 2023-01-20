@@ -100,9 +100,8 @@ usertrap(void)
         p->handler_exec = 1;
         // 保存相关的寄存器
         memmove(p->alarm_trapframe, p->trapframe, sizeof(struct trapframe));
+        // 修改trap返回的处理函数
         p->trapframe->epc = p->handler;
-        
-        
      }
     }
 
@@ -174,11 +173,15 @@ kerneltrap()
   uint64 sstatus = r_sstatus();
   uint64 scause = r_scause();
   
+  // 判断是否是来自 内核 trap
   if((sstatus & SSTATUS_SPP) == 0)
     panic("kerneltrap: not from supervisor mode");
   if(intr_get() != 0)
     panic("kerneltrap: interrupts enabled");
 
+  // devintr() 检查设备中断
+  // 0 ， 不是设备中断
+  // 代表是异常，内核中发生异常是一个严重的事故，要马上panic
   if((which_dev = devintr()) == 0){
     printf("scause %p\n", scause);
     printf("sepc=%p stval=%p\n", r_sepc(), r_stval());
@@ -186,6 +189,7 @@ kerneltrap()
   }
 
   // give up the CPU if this is a timer interrupt.
+  // 如果是时钟中断，放弃CPU
   if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
     yield();
 

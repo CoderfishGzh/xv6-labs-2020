@@ -25,6 +25,7 @@ int
 fetchstr(uint64 addr, char *buf, int max)
 {
   struct proc *p = myproc();
+  // 从 user 空间检索 addr
   int err = copyinstr(p->pagetable, buf, addr, max);
   if(err < 0)
     return err;

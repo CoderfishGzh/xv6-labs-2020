@@ -96,6 +96,8 @@ struct proc {
 
   // these are private to the process, so p->lock need not be held.
   uint64 kstack;               // Virtual address of kernel stack
+  // p->sz 是 heap 的最底端， stack 的最上端
+  // 程序刚开始执行时，sbrk指向的位置
   uint64 sz;                   // Size of process memory (bytes)
   pagetable_t pagetable;       // User page table
   struct trapframe *trapframe; // data page for trampoline.S
