@@ -65,7 +65,7 @@ usertrap(void)
     intr_on();
 
     syscall();
-  } else if(r_scause() == 15 || r_scause == 13) {
+  } else if(r_scause() == 15 || r_scause() == 13) {
     // 造成页面错误的错误地址
     uint64 error_address = r_stval();
     printf("page fault, error_address: %d\n", error_address);
