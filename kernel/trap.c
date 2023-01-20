@@ -87,7 +87,7 @@ usertrap(void)
     uint64 va = PGROUNDDOWN(error_address);
 
     // 在pagetable上，添加新的PTE映射
-    if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U|PTE_V) != 0) {
+    if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
       panic("fix page fault error: create ptes error");
     }
 

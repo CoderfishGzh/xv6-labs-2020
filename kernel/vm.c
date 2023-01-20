@@ -56,18 +56,18 @@ kvminithart()
   sfence_vma();
 }
 
-// Return the address of the PTE in page table pagetable
-// that corresponds to virtual address va.  If alloc!=0,
-// create any required page-table pages.
+//返回PTE在页表pagetable中的地址
+//对应于虚拟地址 va。如果分配！=0，
+//创建任何需要的页表页面。
 //
-// The risc-v Sv39 scheme has three levels of page-table
-// pages. A page-table page contains 512 64-bit PTEs.
-// A 64-bit virtual address is split into five fields:
-//   39..63 -- must be zero.
-//   30..38 -- 9 bits of level-2 index.
-//   21..29 -- 9 bits of level-1 index.
-//   12..20 -- 9 bits of level-0 index.
-//    0..11 -- 12 bits of byte offset within the page.
+//risc-v Sv39方案有三级页表
+//页面。页表页包含 512 个 64 位 PTE。
+//一个 64 位的虚拟地址被分成五个字段：
+//39..63 --必须为零。
+//30..38 --9 位二级索引。
+//21..29 --9 位一级索引。
+//12..20 --9 位 0 级索引。
+//0..11 --页内字节偏移量的 12 位。
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
