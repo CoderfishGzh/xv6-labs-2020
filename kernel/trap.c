@@ -65,6 +65,26 @@ usertrap(void)
     intr_on();
 
     syscall();
+  } else if(r_scause() == 15 || r_scause == 13) {
+    // 造成页面错误的错误地址
+    uint64 error_address = r_stval();
+    printf("page fault, error_address: %d\n", error_address);
+
+    // 分配物理空间
+    char* mem = kalloc();
+    if(mem == 0) {
+      panic("page fault but oom");
+    }
+    // 将该page至0
+    memset(mem, 0, PGSIZE);
+    
+    uint64 va = PGROUNDDOWN(error_address);
+
+    // 在pagetable上，添加新的PTE映射
+    if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U|PTE_V) != 0) {
+      panic("fix page fault error: create ptes error");
+    }
+
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
