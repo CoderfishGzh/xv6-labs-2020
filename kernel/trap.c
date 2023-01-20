@@ -83,7 +83,7 @@ usertrap(void)
       p->killed = 1;
     } else {
       // 将该page至0
-      memset(mem, 0, PGSIZE);
+      memset((void*)mem, 0, PGSIZE);
        
       uint64 va = PGROUNDDOWN(error_address);
 
