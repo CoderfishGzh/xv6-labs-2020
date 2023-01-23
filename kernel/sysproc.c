@@ -48,6 +48,11 @@ sys_sbrk(void)
     return -1;
 
   addr = myproc()->sz;
+   
+  if(addr + n > MAXVA) {
+    myproc()->killed = 1;
+    return addr;
+  } 
   
   if(growproc_lazy(n) < 0)
     return -1;

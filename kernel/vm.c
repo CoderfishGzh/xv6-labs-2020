@@ -320,8 +320,8 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   // 从0开始，遍历父进程的整个页表
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
-      panic("uvmcopy: pte should exist");
-      // continue;
+      // panic("uvmcopy: pte should exist");
+      continue;
     if((*pte & PTE_V) == 0)
       // panic("uvmcopy: page not present");
       continue;
