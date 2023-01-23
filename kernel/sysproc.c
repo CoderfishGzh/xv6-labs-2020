@@ -47,18 +47,9 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
-  // if(growproc(n) < 0)
-  //   return -1;
-
-  if(n > 0) {
-    // 增加的情况
-    myproc()->sz = addr + n;
-  } else {
-    // 减少堆内存
-    // myproc()->sz = addr - n;
-    // uvmdealloc(myproc()->pagetable, addr, addr + n);
-    // addr += n;
-  }
+  
+  if(growproc(n) < 0)
+    return -1;
 
   return addr;
 }
