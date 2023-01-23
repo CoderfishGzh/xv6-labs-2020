@@ -49,7 +49,7 @@ sys_sbrk(void)
 
   addr = myproc()->sz;
    
-  if(addr + n > MAXVA) {
+  if(addr + n >= MAXVA || addr + n <= 0) {
     myproc()->killed = 1;
     return addr;
   } 
