@@ -257,7 +257,8 @@ growproc(int n)
   return 0;
 }
 
-int growproc_lazy(int n) {
+int 
+growproc_lazy(int n) {
   uint sz;
   struct proc *p = myproc();
 
