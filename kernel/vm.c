@@ -104,7 +104,7 @@ walkaddr(pagetable_t pagetable, uint64 va)
     return 0;
 
   pte = walk(pagetable, va, 0);
-  struct proc *p = myproc();
+  // struct proc *p = myproc();
   if(pte == 0) {
 
     // if (va >= p->sz || va < p->trapframe->sp)
