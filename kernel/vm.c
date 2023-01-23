@@ -102,7 +102,12 @@ walkaddr(pagetable_t pagetable, uint64 va)
     return 0;
 
   pte = walk(pagetable, va, 0);
+
   if(pte == 0 || (*pte & PTE_V) == 0) {
+
+    if (va >= myproc()->sz || va < myproc()->trapframe->sp)
+      return 0;
+
     // 进行page 分配
     uint64 mem = (uint64)kalloc();
     if(mem == 0) {
