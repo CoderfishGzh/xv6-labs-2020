@@ -71,7 +71,9 @@ usertrap(void)
     // printf("page fault, error_address: %d\n", error_address);
 
     // error address > p->sz, 中止进程
-    if(error_address > p->sz || error_address < p->stack_sz) {
+    // sp是用户的栈指针 stack point
+    // 如果用户申请的 va 超出heap表现的范围，则将该程序杀死
+    if(error_address > p->sz || error_address < p->trapframe->sp) {
       // printf("fix page fault error: error address 不在合适的范围内\n");
       p->killed = 1;
     }
@@ -94,8 +96,6 @@ usertrap(void)
         p->killed = 1;
       }
     }
-
-    
 
   } else if((which_dev = devintr()) != 0){
     // ok

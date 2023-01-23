@@ -49,11 +49,12 @@ sys_sbrk(void)
 
   addr = myproc()->sz;
    
+  // 当申请的空间超出范围，不做操作
   if(addr + n >= MAXVA || addr + n <= 0) {
-    myproc()->killed = 1;
     return addr;
   } 
   
+  // 进行lazy分配
   if(growproc_lazy(n) < 0)
     return -1;
 
