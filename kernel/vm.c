@@ -5,7 +5,7 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
-#include "proc.h"
+// #include "proc.h"
 // #include "spinlock.h"
 
 /*
@@ -105,27 +105,27 @@ walkaddr(pagetable_t pagetable, uint64 va)
 
   pte = walk(pagetable, va, 0);
   struct proc *p = myproc();
-  if(pte == 0 || (*pte & PTE_V) == 0) {
+  if(pte == 0) {
 
-    if (va >= p->sz || va < p->trapframe->sp)
-      return 0;
+    // if (va >= p->sz || va < p->trapframe->sp)
+    //   return 0;
 
-    // 进行page 分配
-    uint64 mem = (uint64)kalloc();
-    if(mem == 0) {
-      return 0;
-    }
+    // // 进行page 分配
+    // uint64 mem = (uint64)kalloc();
+    // if(mem == 0) {
+    //   return 0;
+    // }
 
-    memset((void*)mem, 0, PGSIZE);
+    // memset((void*)mem, 0, PGSIZE);
 
-    if(mappages(pagetable, PGROUNDDOWN(va), PGSIZE, mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
-        kfree((void*) mem);
-        return 0;
-      }
-
+    // if(mappages(pagetable, PGROUNDDOWN(va), PGSIZE, mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
+    //     kfree((void*) mem);
+    //     return 0;
+    //   }
+    return 0;
   }
-  // if((*pte & PTE_V) == 0)
-  //   return 0;
+  if((*pte & PTE_V) == 0)
+    return 0;
   if((*pte & PTE_U) == 0)
     return 0;
   pa = PTE2PA(*pte);
