@@ -1,4 +1,4 @@
-#include "spinlock.h"
+// #include "spinlock.h"
 
 // Saved registers for kernel context switches.
 struct context {
