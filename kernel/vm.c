@@ -294,6 +294,7 @@ freewalk(pagetable_t pagetable)
 
 // Free user memory pages,
 // then free page-table pages.
+
 void
 uvmfree(pagetable_t pagetable, uint64 sz)
 {
@@ -302,12 +303,12 @@ uvmfree(pagetable_t pagetable, uint64 sz)
   freewalk(pagetable);
 }
 
-// Given a parent process's page table, copy
-// its memory into a child's page table.
-// Copies both the page table and the
-// physical memory.
-// returns 0 on success, -1 on failure.
-// frees any allocated pages on failure.
+//给定一个父进程的页表，复制
+//它的内存到子页表中。
+//复制页表和
+//物理内存。
+//成功返回 0，失败返回 -1。
+//失败时释放所有分配的页面。
 int
 uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
@@ -316,11 +317,14 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   uint flags;
   char *mem;
 
+  // 从0开始，遍历父进程的整个页表
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
-      panic("uvmcopy: pte should exist");
+      // panic("uvmcopy: pte should exist");
+      continue;
     if((*pte & PTE_V) == 0)
-      panic("uvmcopy: page not present");
+      // panic("uvmcopy: page not present");
+      continue;
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)

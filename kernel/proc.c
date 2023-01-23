@@ -187,6 +187,8 @@ proc_pagetable(struct proc *p)
 
 // Free a process's page table, and free the
 // physical memory it refers to.
+
+// 释放进程的page table，释放它引用的的物理内存
 void
 proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
@@ -271,6 +273,7 @@ fork(void)
   }
 
   // Copy user memory from parent to child.
+  // 将 父子进程的内存复制给子进程
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
     release(&np->lock);
