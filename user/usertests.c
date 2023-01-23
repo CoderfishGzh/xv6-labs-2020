@@ -2224,13 +2224,17 @@ sbrkarg(char *s)
   char *a;
   int fd, n;
 
+  // 创建4KB大小的heap空间
   a = sbrk(PGSIZE);
+  // 以创建的形式的打开一个 sbrk 文件
   fd = open("sbrk", O_CREATE|O_WRONLY);
   unlink("sbrk");
   if(fd < 0)  {
     printf("%s: open sbrk failed\n", s);
     exit(1);
   }
+  // 进行系统调用,将a里面的东西，写到fd文件里面
+  // 
   if ((n = write(fd, a, PGSIZE)) < 0) {
     printf("%s: write sbrk failed\n", s);
     exit(1);

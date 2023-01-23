@@ -102,10 +102,24 @@ walkaddr(pagetable_t pagetable, uint64 va)
     return 0;
 
   pte = walk(pagetable, va, 0);
-  if(pte == 0)
+  if(pte == 0 || (*pte & PTE_V) == 0) {
+    // 进行page 分配
+    uint64 mem = (uint64)kalloc();
+    if(mem == 0) {
+      return 0;
+    }
+
+    memset((void*)mem, 0, PGSIZE);
+
+    if(mappages(pagetable, va, PGSIZE, mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
+        kfree((void*) mem);
+        return 0;
+      }
+
+  }
     return 0;
-  if((*pte & PTE_V) == 0)
-    return 0;
+  // if((*pte & PTE_V) == 0)
+  //   return 0;
   if((*pte & PTE_U) == 0)
     return 0;
   pa = PTE2PA(*pte);
@@ -385,6 +399,8 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 // Copy from user to kernel.
 // Copy len bytes to dst from virtual address srcva in a given page table.
 // Return 0 on success, -1 on error.
+// 从用户页表页表中的虚拟地址srcva复制max字节到dst
+// walkaddr（它又调用walk）在软件中遍历页表，以确定srcva的物理地址pa0
 int
 copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 {

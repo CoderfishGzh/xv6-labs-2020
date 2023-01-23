@@ -50,6 +50,7 @@ usertrap(void)
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
+  // trap的原因是进行系统调用
   if(r_scause() == 8){
     // system call
 
