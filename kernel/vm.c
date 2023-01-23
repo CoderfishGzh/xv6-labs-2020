@@ -111,13 +111,12 @@ walkaddr(pagetable_t pagetable, uint64 va)
 
     memset((void*)mem, 0, PGSIZE);
 
-    if(mappages(pagetable, va, PGSIZE, mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
+    if(mappages(pagetable, PGROUNDDOWN(va), PGSIZE, mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
         kfree((void*) mem);
         return 0;
       }
 
   }
-    return 0;
   // if((*pte & PTE_V) == 0)
   //   return 0;
   if((*pte & PTE_U) == 0)
