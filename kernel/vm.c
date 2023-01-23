@@ -142,10 +142,10 @@ kvmpa(uint64 va)
   return pa+off;
 }
 
-// Create PTEs for virtual addresses starting at va that refer to
-// physical addresses starting at pa. va and size might not
-// be page-aligned. Returns 0 on success, -1 if walk() couldn't
-// allocate a needed page-table page.
+//为从 va 开始的虚拟地址创建 PTE，引用
+//从 pa 开始的物理地址。 va 和 size 可能不会
+//页面对齐。成功返回 0，如果 walk() 失败则返回 -1
+//分配一个需要的页表页。
 int
 mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 {

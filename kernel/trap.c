@@ -76,9 +76,8 @@ usertrap(void)
     if(error_address > p->sz || error_address < p->trapframe->sp) {
       // printf("fix page fault error: error address 不在合适的范围内\n");
       p->killed = 1;
-    }
-
-    // 分配物理空间
+    } else {
+      // 分配物理空间
     uint64 mem = (uint64)kalloc();
     if(mem == 0) {
       // printf("fix page fault error: oom\n");
@@ -97,6 +96,9 @@ usertrap(void)
       }
     }
 
+    }
+
+    
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
