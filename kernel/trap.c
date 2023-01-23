@@ -68,18 +68,18 @@ usertrap(void)
   } else if(r_scause() == 15 || r_scause() == 13) {
     // 造成页面错误的错误地址
     uint64 error_address = r_stval();
-    printf("page fault, error_address: %d\n", error_address);
+    // printf("page fault, error_address: %d\n", error_address);
 
     // error address > p->sz, 中止进程
     if(error_address > p->sz || error_address < p->stack_sz) {
-      printf("fix page fault error: error address 不在合适的范围内\n");
+      // printf("fix page fault error: error address 不在合适的范围内\n");
       p->killed = 1;
     }
 
     // 分配物理空间
     uint64 mem = (uint64)kalloc();
     if(mem == 0) {
-      printf("fix page fault error: oom\n");
+      // printf("fix page fault error: oom\n");
       p->killed = 1;
     } else {
       // 将该page至0
@@ -90,7 +90,7 @@ usertrap(void)
       // 在pagetable上，添加新的PTE映射
       if(mappages(p->pagetable, va, PGSIZE, mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
         kfree((void*) mem);
-        printf("fix page fault error: create ptes error");
+        // printf("fix page fault error: create ptes error");
         p->killed = 1;
       }
     }
