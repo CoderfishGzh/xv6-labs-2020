@@ -102,10 +102,10 @@ walkaddr(pagetable_t pagetable, uint64 va)
     return 0;
 
   pte = walk(pagetable, va, 0);
-
+  struct proc *p = myproc();
   if(pte == 0 || (*pte & PTE_V) == 0) {
 
-    if (va >= myproc()->sz || va < myproc()->trapframe->sp)
+    if (va >= p->sz || va < p->trapframe->sp)
       return 0;
 
     // 进行page 分配
