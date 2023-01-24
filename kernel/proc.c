@@ -268,6 +268,7 @@ fork(void)
   }
 
   // Copy user memory from parent to child.
+  // 复制用户的内存给子进程
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
     release(&np->lock);

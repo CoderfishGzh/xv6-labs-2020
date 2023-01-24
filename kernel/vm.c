@@ -56,18 +56,20 @@ kvminithart()
   sfence_vma();
 }
 
-// Return the address of the PTE in page table pagetable
-// that corresponds to virtual address va.  If alloc!=0,
-// create any required page-table pages.
+//返回PTE在页表pagetable中的地址
+//对应于虚拟地址 va。如果分配！=0，
+//创建任何需要的页表页面。
 //
-// The risc-v Sv39 scheme has three levels of page-table
-// pages. A page-table page contains 512 64-bit PTEs.
-// A 64-bit virtual address is split into five fields:
+//risc-v Sv39方案有三级页表
+//页面。页表页包含 512 个 64 位 PTE。
+//一个 64 位的虚拟地址被分成五个字段：
 //   39..63 -- must be zero.
 //   30..38 -- 9 bits of level-2 index.
 //   21..29 -- 9 bits of level-1 index.
 //   12..20 -- 9 bits of level-0 index.
 //    0..11 -- 12 bits of byte offset within the page.
+
+// 返回PTE在 page table pagetable
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
@@ -311,20 +313,37 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   pte_t *pte;
   uint64 pa, i;
   uint flags;
-  char *mem;
+  // char *mem;
 
+  // 遍历整个page table
   for(i = 0; i < sz; i += PGSIZE){
+    // 找到这页对应的页表项
     if((pte = walk(old, i, 0)) == 0)
       panic("uvmcopy: pte should exist");
+    // 判断这个页表项是否有效
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
+
+    // 清除父PTE的PTE_W标志
+    // wanring, 写法有错
+    *pte &= ~PTE_U;
+    
+    // 得到物理地址
     pa = PTE2PA(*pte);
+    // 得到 flags
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
+
+    // 申请新的空间
+    // if((mem = kalloc()) == 0)
+    //   goto err;
+
+    // 将pa对应的地址的内容，复制到新申请的空间mem里面
+    // memmove(mem, (char*)pa, PGSIZE);
+
+    // 由于是cow机制，子进程不用申请新的空间，直接映射父进程的 pa即可 
+    // 并且父进程的写标识位已经修改过，所有不用额外进行修改
+    if(mappages(new, i, PGSIZE, pa, flags) != 0){
+      // kfree(mem);
       goto err;
     }
   }
@@ -335,8 +354,8 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   return -1;
 }
 
-// mark a PTE invalid for user access.
-// used by exec for the user stack guard page.
+//将 PTE 标记为对用户访问无效。
+//exec 用于用户堆栈保护页面。
 void
 uvmclear(pagetable_t pagetable, uint64 va)
 {
