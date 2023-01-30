@@ -40,10 +40,11 @@ kinit()
   printf("kinit\n");
   // 初始化 cow_ref 需要记录的变量
   cow_ref.page_cnt = (PHYSTOP - (uint64) end) / PGSIZE;
-  cow_ref.end_ = (char*) ((uint64) end + cow_ref.page_cnt);
+  printf("page cnt: %d\n", cow_ref.page_cnt);
   cow_ref.page_ref = end;
+  cow_ref.end_ = cow_ref.page_ref + cow_ref.page_cnt;
 
-  for(int i = (uint64) cow_ref.page_ref; i < cow_ref.page_cnt; i++) {
+  for(int i = 0; i < cow_ref.page_cnt; i++) {
     cow_ref.page_ref[i] = 1;
   }
 
