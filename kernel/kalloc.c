@@ -54,7 +54,7 @@ get_index(uint64 pa) {
   uint64 index = (pa - (uint64) kmem.new_end) / PGSIZE;
   if(index < 0 || index >= kmem.page_cnt) {
     printf("index: %d\n", index);
-    printf("pa: %d, kmem new_end: %d\n", pa, (uint64) kmem.new_end);
+    printf("pa: %p, kmem new_end: %p\n", pa, kmem.new_end);
     panic("ref index illegl");
   }
 
