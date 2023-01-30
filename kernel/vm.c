@@ -196,11 +196,6 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
   }
 }
 
-uint64
-cow_check() {
-  
-}
-
 // create an empty user page table.
 // returns 0 if out of memory.
 pagetable_t
@@ -501,9 +496,6 @@ cow_allow(pagetable_t pagetable, uint64 va) {
     return 0;
   if((*pte & PTE_U) == 0)
     return 0;
-
-  // get pa
-  uint64 pa = PTE2PA((uint64) pte);
 
   // get flag
   uint64 pte_flags = PTE_FLAGS((uint64) pte);
