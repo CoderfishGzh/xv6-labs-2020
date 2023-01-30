@@ -35,7 +35,7 @@ kinit()
 
   // 将内核结束地址往上抬，留出空间作为记录pa引用计数
   kmem.page_cnt = (PHYSTOP - (uint64)end) / PGSIZE;
-  kmem.new_end = (uint64) end + kmem.page_cnt;
+  kmem.new_end = (char*)((uint64) end + kmem.page_cnt);
   kmem.cow_page_ref = end;
   
   // 初始化 引用计数
