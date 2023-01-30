@@ -43,7 +43,7 @@ kinit()
   }
 
   printf("page_cnt: %d\n", kmem.page_cnt);
-  freerange(new_end, (void*)PHYSTOP);
+  freerange((char*) new_end, (void*)PHYSTOP);
 }
 
 void
