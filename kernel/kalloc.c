@@ -47,6 +47,7 @@ kinit()
     cow_ref.page_ref[i] = 1;
   }
   freerange(cow_ref.end_, (void*)PHYSTOP);
+  printf("after freerange");
 }
 
 int
