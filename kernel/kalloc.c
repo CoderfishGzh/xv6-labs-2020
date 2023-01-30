@@ -106,8 +106,10 @@ kfree(void *pa)
 
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
-  acquire(&cow_ref.lock);
+
+  
   desc((uint64) pa);
+  acquire(&cow_ref.lock);
   uint64 index = get_index((uint64) pa);
   int ref_cnt = cow_ref.page_ref[index];
   if(ref_cnt != 0) {
