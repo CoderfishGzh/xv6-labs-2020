@@ -111,10 +111,8 @@ kfree(void *pa)
   int ref_cnt = cow_ref.page_ref[index];
   if(ref_cnt != 0) {
     release(&cow_ref.lock);
-    printf("ref_cnt != 0");
     return;
   } else {
-    printf("ref_fnt == 0");
     release(&cow_ref.lock);
   }
 
