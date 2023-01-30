@@ -476,7 +476,7 @@ is_cow_fault(pagetable_t pagetable, uint64 va) {
     return 0;
   if((*pte & PTE_U) == 0)
     return 0;
-  if(*pte & PTE_COW) {
+  if((*pte & PTE_COW) == 1) {
     return 1;
   }
   return 0;
