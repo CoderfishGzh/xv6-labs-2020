@@ -41,7 +41,7 @@ kinit()
   
   // 初始化 引用计数
   for(int i = 0; i < kmem.page_cnt; i++) {
-    kmem.cow_page_ref[i] = 0;
+    kmem.cow_page_ref[i] = 1;
   }
   printf("page cnt: %d\n", kmem.page_cnt);
   freerange(kmem.new_end, (void*)PHYSTOP);
