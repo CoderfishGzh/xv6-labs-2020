@@ -21,9 +21,6 @@ struct run {
 struct {
   struct spinlock lock;
   struct run *freelist;
-  char* cow_page_ref;
-  uint64 page_cnt;
-  char* new_end;
 } kmem;
 
 struct {
@@ -50,7 +47,7 @@ kinit()
     cow_ref.page_ref[i] = 1;
   }
 
-  freerange(kmem.new_end, (void*)PHYSTOP);
+  freerange(cow_ref.end_, (void*)PHYSTOP);
 }
 
 int
@@ -60,7 +57,7 @@ get_index(uint64 pa) {
   int index = (pa - (uint64) cow_ref.end_) / PGSIZE;
   if(index < 0 || index >= cow_ref.page_cnt) {
     printf("index: %d\n", index);
-    printf("pa: %p, kmem new_end: %p\n", pa, kmem.new_end);
+    printf("pa: %p, cow_ref end_: %p\n", pa, cow_ref.end_);
     panic("ref index illegl");
   }
 
