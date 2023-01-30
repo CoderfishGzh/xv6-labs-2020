@@ -90,10 +90,11 @@ kfree(void *pa)
 {
   struct run *r;
 
-  desc((uint64) pa);
+  
   // get pa ref 
   // 如果引用 > 0, 则不进行释放
-  if(kmem.cow_page_ref[get_index((uint64)pa)] != 0) {
+  if(kmem.cow_page_ref[get_index((uint64)pa)] > 1) {
+    desc((uint64) pa);
     return;
   }
 
