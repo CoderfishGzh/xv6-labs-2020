@@ -37,7 +37,6 @@ kinit()
 {
   initlock(&kmem.lock, "kmem");
   // initlock(&cow_ref.lock, "cow_ref");
-  printf("kinit\n");
   // 初始化 cow_ref 需要记录的变量
   cow_ref.page_cnt = (PHYSTOP - (uint64) end) / PGSIZE;
   printf("page cnt: %d\n", cow_ref.page_cnt);
@@ -47,8 +46,6 @@ kinit()
   for(int i = 0; i < cow_ref.page_cnt; i++) {
     cow_ref.page_ref[i] = 1;
   }
-
-  printf("kinit\n");
   freerange(cow_ref.end_, (void*)PHYSTOP);
 }
 
@@ -93,9 +90,7 @@ freerange(void *pa_start, void *pa_end)
 {
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
-  printf("freerange");
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE) {
-    printf("for freerange");
     kfree(p);
   }
 }
@@ -110,7 +105,6 @@ kfree(void *pa)
 
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
-  printf("kree");
   acquire(&cow_ref.lock);
   // desc((uint64) pa);
   uint64 index = get_index((uint64) pa);
