@@ -501,13 +501,14 @@ cow_allow(pagetable_t pagetable, uint64 va) {
   if((*pte & PTE_U) == 0)
     return 0;
 
+   // set ~cow and PTE_W
+  *pte &= (~PTE_COW);
+  *pte |= PTE_W;
   // get flag
   uint64 pte_flags = PTE_FLAGS((uint64) pte);
   // get pa
   uint64 old_pa = PTE2PA((uint64) pte);
-  // set ~cow and PTE_W
-  pte_flags &= ~PTE_COW;
-  pte_flags |= PTE_W;
+ 
 
   // copy old_pa to new_pa
   memmove((void*)ka, (void*)old_pa, PGSIZE);
@@ -517,6 +518,7 @@ cow_allow(pagetable_t pagetable, uint64 va) {
 
   // 对新的pa进行映射
   if(mappages(pagetable, va, PGSIZE, (uint64)ka, pte_flags) != 0) {
+    kfree(ka);
     return -1;
   }
 
