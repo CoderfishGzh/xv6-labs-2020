@@ -502,10 +502,14 @@ cow_allow(pagetable_t pagetable, uint64 va) {
 
   // get flag
   uint64 pte_flags = PTE_FLAGS((uint64) pte);
-
+  // get pa
+  uint64 old_pa = PTE2PA((uint64) pte);
   // set ~cow and PTE_W
   pte_flags &= ~PTE_COW;
   pte_flags |= PTE_W;
+
+  // copy old_pa to new_pa
+  memmove(ka, old_pa, PGSIZE);
 
   // clear old pa
   uvmunmap(pagetable, va, 1, 1);
