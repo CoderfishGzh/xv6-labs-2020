@@ -73,10 +73,12 @@ usertrap(void)
     // 判断是否是 COW
     if(is_cow_fault(p->pagetable, va)) {
       // 进行page分配
+      printf("is cow\n");
       if(cow_allow(p->pagetable, va) < 0) {
         p->killed = 1;
       }
     } else {
+        printf("not cow\n");
         printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
         printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
         p->killed = 1;
