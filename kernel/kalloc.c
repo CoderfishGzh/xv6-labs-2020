@@ -105,7 +105,7 @@ kfree(void *pa)
 
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
-  
+  printf("kree");
   acquire(&cow_ref.lock);
   // desc((uint64) pa);
   uint64 index = get_index((uint64) pa);
