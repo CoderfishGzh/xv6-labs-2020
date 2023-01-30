@@ -110,13 +110,15 @@ kfree(void *pa)
     panic("kfree");
   
   acquire(&cow_ref.lock);
-  desc((uint64) pa);
+  // desc((uint64) pa);
   uint64 index = get_index((uint64) pa);
   int ref_cnt = cow_ref.page_ref[index];
   if(ref_cnt != 0) {
     release(&cow_ref.lock);
+    printf("ref_cnt != 0");
     return;
   } else {
+    printf("ref_fnt == 0");
     release(&cow_ref.lock);
   }
 
@@ -143,7 +145,7 @@ kalloc(void)
   r = kmem.freelist;
   if(r) {
     kmem.freelist = r->next;
-    insr((uint64) r); 
+    // insr((uint64) r); 
   }
   release(&kmem.lock);
 
