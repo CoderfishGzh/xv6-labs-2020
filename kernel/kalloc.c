@@ -11,8 +11,8 @@
 
 void freerange(void *pa_start, void *pa_end);
 
-extern char end[]; // first address after kernel.
-                   // defined by kernel.ld.
+extern char end[]; //内核之后的第一个地址。
+                   //由 kernel.ld 定义。
 
 struct run {
   struct run *next;
@@ -23,10 +23,14 @@ struct {
   struct run *freelist;
 } kmem;
 
+// 初始化空闲列表
+// 保存从end 到 PHYSTOP 之间的每一页，
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
+  int page_cnt = ((uint64) end - PHYSTOP) / PGSIZE;
+  printf("page_cnt: %d\n", page_cnt);
   freerange(end, (void*)PHYSTOP);
 }
 
@@ -38,11 +42,10 @@ freerange(void *pa_start, void *pa_end)
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
 }
-
-// Free the page of physical memory pointed at by v,
-// which normally should have been returned by a
-// call to kalloc().  (The exception is when
-// initializing the allocator; see kinit above.)
+//释放 v 指向的物理内存页，
+//通常应该由 a 返回
+//调用 kalloc()。 （例外是当
+//初始化分配器；参见上面的 kinit。）
 void
 kfree(void *pa)
 {
@@ -51,7 +54,7 @@ kfree(void *pa)
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-  // Fill with junk to catch dangling refs.
+  //填充垃圾以捕获悬挂的引用。
   memset(pa, 1, PGSIZE);
 
   r = (struct run*)pa;

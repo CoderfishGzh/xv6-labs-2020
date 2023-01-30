@@ -169,9 +169,9 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
   return 0;
 }
 
-// Remove npages of mappings starting from va. va must be
-// page-aligned. The mappings must exist.
-// Optionally free the physical memory.
+//删除从 va 开始的 n 页映射。必须是
+//页面对齐。映射必须存在。
+//可选地释放物理内存。
 void
 uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
 {
@@ -194,6 +194,11 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
     }
     *pte = 0;
   }
+}
+
+uint64
+cow_check() {
+  
 }
 
 // create an empty user page table.
@@ -301,12 +306,12 @@ uvmfree(pagetable_t pagetable, uint64 sz)
   freewalk(pagetable);
 }
 
-// Given a parent process's page table, copy
-// its memory into a child's page table.
-// Copies both the page table and the
-// physical memory.
-// returns 0 on success, -1 on failure.
-// frees any allocated pages on failure.
+//给定一个父进程的页表，复制
+//它的内存到子页表中。
+//复制页表和
+//物理内存。
+//成功返回 0，失败返回 -1。
+//失败时释放所有分配的页面。
 int
 uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
@@ -325,8 +330,9 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
       panic("uvmcopy: page not present");
 
     // 清除父PTE的PTE_W标志
-    // wanring, 写法有错
-    *pte &= ~PTE_U;
+    *pte &= ~PTE_W;
+    // 设置 COW 标识
+    *pte |= PTE_COW;
     
     // 得到物理地址
     pa = PTE2PA(*pte);
@@ -458,4 +464,61 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+
+// 判断该 page 是否是 cow fault
+uint64
+is_cow_fault(pagetable_t pagetable, uint64 va) {
+  va = PGROUNDDOWN(va);
+  // get pte
+  pte_t* pte = walk(pagetable, va, 0);
+  if(pte == 0)
+    return 0;
+  if((*pte & PTE_V) == 0)
+    return 0;
+  if((*pte & PTE_U) == 0)
+    return 0;
+  if(*pte & PTE_COW) {
+    return 1;
+  }
+  return 0;
+}
+
+uint64
+cow_allow(pagetable_t pagetable, uint64 va) {
+  va = PGROUNDDOWN(va);
+  // 分配新page
+  uint64 ka = (uint64) kalloc();
+  if(ka == 0) {
+    return -1;
+  }
+
+  // get pte
+  pte_t* pte = walk(pagetable, va, 0);
+  if(pte == 0)
+    return 0;
+  if((*pte & PTE_V) == 0)
+    return 0;
+  if((*pte & PTE_U) == 0)
+    return 0;
+
+  // get pa
+  uint64 pa = PTE2PA((uint64) pte);
+
+  // get flag
+  uint64 pte_flags = PTE_FLAGS((uint64) pte);
+
+  // set ~cow and PTE_W
+  pte_flags &= ~PTE_COW;
+  pte_flags |= PTE_W;
+
+  // clear old pa
+  uvmunmap(pagetable, va, 1, 1);
+
+  // 对新的pa进行映射
+  if(mappages(pagetable, va, PGSIZE, (uint64)ka, pte_flags) != 0) {
+    return -1;
+  }
+
+  return 0;
 }
