@@ -470,7 +470,7 @@ is_cow_fault(pagetable_t pagetable, uint64 va) {
   if((*pte & PTE_U) == 0)
     return 0;
   if(*pte & PTE_COW) {
-    printf("is cow fault\n");
+    // printf("is cow fault\n");
     return 1;
   }
   return 0;
