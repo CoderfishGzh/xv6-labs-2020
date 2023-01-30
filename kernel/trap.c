@@ -71,9 +71,9 @@ usertrap(void)
     // va = PGROUNDDOWN(va);
 
     // 判断是否是 COW
-    if(is_cow_fault(p->pagetable, va) == 1) {
+    if(is_cow_fault(p->pagetable, va)) {
       // 进行page分配
-      if(cow_allow(p->pagetable, va) <= 0) {
+      if(cow_allow(p->pagetable, va) < 0) {
         p->killed = 1;
       }
     } else {

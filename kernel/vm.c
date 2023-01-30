@@ -488,14 +488,14 @@ cow_allow(pagetable_t pagetable, uint64 va) {
   // get pte
   pte_t* pte = walk(pagetable, va, 0);
   if(pte == 0)
-    return 0;
+    return -1;
   if((*pte & PTE_V) == 0)
-    return 0;
+    return -1;
   if((*pte & PTE_U) == 0)
-    return 0;
+    return -1;
 
    // set ~cow and PTE_W
-  // *pte &= (~PTE_COW);
+  *pte &= (~PTE_COW);
   *pte |= PTE_W;
   // get flag
   uint64 pte_flags = PTE_FLAGS((uint64) pte);
@@ -510,7 +510,7 @@ cow_allow(pagetable_t pagetable, uint64 va) {
   uvmunmap(pagetable, va, 1, 1);
 
   // 对新的pa进行映射
-  if(mappages(pagetable, va, PGSIZE, (uint64)ka, pte_flags) != 0) {
+  if(mappages(pagetable, va, PGSIZE, (uint64)ka, pte_flags) < 0) {
     kfree((void*) ka);
     return -1;
   }
