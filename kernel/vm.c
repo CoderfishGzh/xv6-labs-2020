@@ -518,7 +518,7 @@ cow_allow(pagetable_t pagetable, uint64 va) {
 
   // 对新的pa进行映射
   if(mappages(pagetable, va, PGSIZE, (uint64)ka, pte_flags) != 0) {
-    kfree(ka);
+    kfree((void*) ka);
     return -1;
   }
 
