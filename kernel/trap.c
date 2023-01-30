@@ -147,8 +147,8 @@ usertrapret(void)
   ((void (*)(uint64,uint64))fn)(TRAPFRAME, satp);
 }
 
-// interrupts and exceptions from kernel code go here via kernelvec,
-// on whatever the current kernel stack is.
+//内核代码的中断和异常通过 kernelvec 转到这里，
+//无论当前内核堆栈是什么。
 void 
 kerneltrap()
 {
@@ -161,7 +161,7 @@ kerneltrap()
     panic("kerneltrap: not from supervisor mode");
   if(intr_get() != 0)
     panic("kerneltrap: interrupts enabled");
-
+  
   if((which_dev = devintr()) == 0){
     printf("scause %p\n", scause);
     printf("sepc=%p stval=%p\n", r_sepc(), r_stval());

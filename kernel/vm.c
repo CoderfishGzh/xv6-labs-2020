@@ -501,12 +501,15 @@ cow_allow(pagetable_t pagetable, uint64 va) {
   // get pa
   uint64 old_pa = PTE2PA((uint64) pte);
  
-
   // copy old_pa to new_pa
   memmove((void*)ka, (void*)old_pa, PGSIZE);
 
   // clear old pa
   uvmunmap(pagetable, va, 1, 1);
+
+  if((*pte & PTE_COW) == 0) {
+    printf("pte is not cow");
+  }
 
   // 对新的pa进行映射
   if(mappages(pagetable, va, PGSIZE, (uint64)ka, pte_flags) < 0) {
