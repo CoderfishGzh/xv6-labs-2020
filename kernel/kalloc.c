@@ -21,6 +21,8 @@ struct run {
 struct {
   struct spinlock lock;
   struct run *freelist;
+  char* cow_page_ref;
+  uint64 page_cnt;
 } kmem;
 
 // 初始化空闲列表
@@ -29,9 +31,19 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  int page_cnt = ((uint64) end - PHYSTOP) / PGSIZE;
-  printf("page_cnt: %d\n", page_cnt);
-  freerange(end, (void*)PHYSTOP);
+
+  // 将内核结束地址往上抬，留出空间作为记录pa引用计数
+  kmem.page_cnt = (PHYSTOP - (uint64)end) / PGSIZE;
+  uint64 new_end = (uint64) end + kmem.page_cnt;
+  kmem.cow_page_ref = end;
+  
+  // 初始化 引用计数
+  for(int i = 0; i < kmem.page_cnt; i++) {
+    kmem.cow_page_ref[i] = 0;
+  }
+
+  printf("page_cnt: %d\n", kmem.page_cnt);
+  freerange(new_end, (void*)PHYSTOP);
 }
 
 void
@@ -65,9 +77,9 @@ kfree(void *pa)
   release(&kmem.lock);
 }
 
-// Allocate one 4096-byte page of physical memory.
-// Returns a pointer that the kernel can use.
-// Returns 0 if the memory cannot be allocated.
+//分配一个 4096 字节的物理内存页。
+//返回一个内核可以使用的指针。
+//如果无法分配内存，则返回 0。
 void *
 kalloc(void)
 {
