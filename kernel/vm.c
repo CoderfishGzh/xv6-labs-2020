@@ -335,13 +335,6 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
     // 得到 flags
     flags = PTE_FLAGS(*pte);
 
-    // 申请新的空间
-    // if((mem = kalloc()) == 0)
-    //   goto err;
-
-    // 将pa对应的地址的内容，复制到新申请的空间mem里面
-    // memmove(mem, (char*)pa, PGSIZE);
-
     // 由于是cow机制，子进程不用申请新的空间，直接映射父进程的 pa即可 
     // 并且父进程的写标识位已经修改过，所有不用额外进行修改
     if(mappages(new, i, PGSIZE, pa, flags) != 0){
@@ -477,7 +470,7 @@ is_cow_fault(pagetable_t pagetable, uint64 va) {
   if((*pte & PTE_U) == 0)
     return 0;
   if(*pte & PTE_COW) {
-    printf("is cow fault");
+    printf("is cow fault\n");
     return 1;
   }
   return 0;
@@ -502,7 +495,7 @@ cow_allow(pagetable_t pagetable, uint64 va) {
     return 0;
 
    // set ~cow and PTE_W
-  *pte &= (~PTE_COW);
+  // *pte &= (~PTE_COW);
   *pte |= PTE_W;
   // get flag
   uint64 pte_flags = PTE_FLAGS((uint64) pte);

@@ -49,6 +49,12 @@ kinit()
 uint64
 get_index(uint64 pa) {
   pa = PGROUNDDOWN(pa);
+
+  if(pa > PHYSTOP || pa <= (uint64) kmem.new_end) {
+    panic("index illegl");
+  }
+
+
   return (pa - (uint64) kmem.new_end) / PGSIZE;
 }
 
