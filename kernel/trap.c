@@ -68,10 +68,10 @@ usertrap(void)
   } else if(r_scause() == 13 || r_scause() == 15) {
     // 得到出错页地址
     uint64 va = r_stval();
-    va = PGROUNDDOWN(va);
+    // va = PGROUNDDOWN(va);
 
     // 判断是否是 COW
-    if(is_cow_fault(p->pagetable, va)) {
+    if(is_cow_fault(p->pagetable, va) == 1) {
       // 进行page分配
       if(cow_allow(p->pagetable, va) <= 0) {
         p->killed = 1;
