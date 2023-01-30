@@ -141,18 +141,15 @@ kalloc(void)
 
   acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r)
+  if(r) {
     kmem.freelist = r->next;
+    insr((uint64) r); 
+  }
   release(&kmem.lock);
 
   if(r) {
     memset((char*)r, 5, PGSIZE); // fill with junk
-    // r 是 pa
-    insr((uint64) r);
   }
     
-
-  
-
   return (void*)r;
 }
