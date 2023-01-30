@@ -36,8 +36,8 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  initlock(&cow_ref.lock, "cow_ref");
-
+  // initlock(&cow_ref.lock, "cow_ref");
+  printf("kinit");
   // 初始化 cow_ref 需要记录的变量
   cow_ref.page_cnt = (PHYSTOP - (uint64) end) / PGSIZE;
   cow_ref.end_ = (char*) ((uint64) end + cow_ref.page_cnt);
@@ -71,9 +71,9 @@ insr(uint64 pa) {
   pa = PGROUNDDOWN(pa);
   // get index 
   int index = get_index(pa);
-  acquire(&cow_ref.lock);
+  // acquire(&cow_ref.lock);
   cow_ref.page_ref[index]++;
-  release(&cow_ref.lock);
+  // release(&cow_ref.lock);
 }
 
 // 减少引用计数
@@ -82,9 +82,9 @@ desc(uint64 pa) {
   pa = PGROUNDDOWN(pa);
   // get index 
   int index = get_index(pa);
-  acquire(&cow_ref.lock);
+  // acquire(&cow_ref.lock);
   cow_ref.page_ref[index]--;
-  release(&cow_ref.lock);
+  // release(&cow_ref.lock);
 }
 
 void
