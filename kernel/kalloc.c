@@ -43,7 +43,7 @@ kinit()
 
   // 初始化 cow_ref 需要记录的变量
   cow_ref.page_cnt = (PHYSTOP - (uint64) end) / PGSIZE;
-  cow_ref.end_ = (uint64) end + cow_ref.page_cnt;
+  cow_ref.end_ = (char*) ((uint64) end + cow_ref.page_cnt);
   cow_ref.page_ref = end;
 
   for(int i = (uint64) cow_ref.page_ref; i < cow_ref.page_cnt; i++) {
