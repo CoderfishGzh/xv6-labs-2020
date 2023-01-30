@@ -509,7 +509,7 @@ cow_allow(pagetable_t pagetable, uint64 va) {
   pte_flags |= PTE_W;
 
   // copy old_pa to new_pa
-  memmove(ka, old_pa, PGSIZE);
+  memmove((void*)ka, (void*)old_pa, PGSIZE);
 
   // clear old pa
   uvmunmap(pagetable, va, 1, 1);
