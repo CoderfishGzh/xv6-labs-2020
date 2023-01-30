@@ -37,7 +37,7 @@ kinit()
 {
   initlock(&kmem.lock, "kmem");
   // initlock(&cow_ref.lock, "cow_ref");
-  printf("kinit");
+  printf("kinit\n");
   // 初始化 cow_ref 需要记录的变量
   cow_ref.page_cnt = (PHYSTOP - (uint64) end) / PGSIZE;
   cow_ref.end_ = (char*) ((uint64) end + cow_ref.page_cnt);
@@ -47,7 +47,7 @@ kinit()
     cow_ref.page_ref[i] = 1;
   }
 
-  printf("kinit");
+  printf("kinit\n");
   freerange(cow_ref.end_, (void*)PHYSTOP);
 }
 
