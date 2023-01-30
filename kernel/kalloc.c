@@ -36,7 +36,7 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  // initlock(&cow_ref.lock, "cow_ref");
+  initlock(&cow_ref.lock, "cow_ref");
   // 初始化 cow_ref 需要记录的变量
   cow_ref.page_cnt = (PHYSTOP - (uint64) end) / PGSIZE;
   printf("page cnt: %d\n", cow_ref.page_cnt);
