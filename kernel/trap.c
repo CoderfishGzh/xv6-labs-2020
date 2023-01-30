@@ -65,7 +65,7 @@ usertrap(void)
     intr_on();
 
     syscall();
-  } else if(r_scause() == 13 || r_scause() == 15) {
+  } else if(r_scause() == 15) {
     // 得到出错页地址
     uint64 va = r_stval();
     // va = PGROUNDDOWN(va);
@@ -161,7 +161,7 @@ kerneltrap()
     panic("kerneltrap: not from supervisor mode");
   if(intr_get() != 0)
     panic("kerneltrap: interrupts enabled");
-  
+
   if((which_dev = devintr()) == 0){
     printf("scause %p\n", scause);
     printf("sepc=%p stval=%p\n", r_sepc(), r_stval());
