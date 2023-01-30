@@ -484,6 +484,8 @@ cow_allow(pagetable_t pagetable, uint64 va) {
     return -1;
   }
 
+  insr(ka);
+  
   // get pte
   pte_t* pte = walk(pagetable, va, 0);
   if(pte == 0)
