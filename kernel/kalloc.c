@@ -130,7 +130,7 @@ kalloc(void)
     memset((char*)r, 5, PGSIZE); // fill with junk
 
   // r 是 pa
-  insr(r);
+  insr((uint64) r);
 
   return (void*)r;
 }
