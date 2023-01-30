@@ -112,9 +112,10 @@ kfree(void *pa)
   if(ref_cnt != 0) {
     release(&cow_ref.lock);
     return;
-  } else {
-    release(&cow_ref.lock);
   }
+
+  release(&cow_ref.lock);
+  
 
   //填充垃圾以捕获悬挂的引用。
   memset(pa, 1, PGSIZE);
@@ -138,13 +139,13 @@ kalloc(void)
   acquire(&kmem.lock);
   r = kmem.freelist;
   if(r) {
-    kmem.freelist = r->next;
-    insr((uint64) r); 
+    kmem.freelist = r->next; 
   }
   release(&kmem.lock);
 
   if(r) {
     memset((char*)r, 5, PGSIZE); // fill with junk
+    insr((uint64) r);
   }
     
   return (void*)r;
