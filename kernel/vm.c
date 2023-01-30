@@ -485,14 +485,10 @@ cow_allow(pagetable_t pagetable, uint64 va) {
   }
 
   insr(ka);
-  
+
   // get pte
   pte_t* pte = walk(pagetable, va, 0);
-  if(pte == 0)
-    return -1;
-  // if((*pte & PTE_V) == 0)
-  //   return -1;
-  // if((*pte & PTE_U) == 0)
+  // if(pte == 0)
   //   return -1;
 
    // set ~cow and PTE_W
