@@ -100,10 +100,17 @@ kfree(void *pa)
   
   // get pa ref 
   // 如果引用 > 0, 则不进行释放
-  if(kmem.cow_page_ref[get_index((uint64)pa)] > 1) {
+  // get pa index
+  uint64 index = get_index((uint64) pa);
+  // get ref 
+  uint64 ref_cnt = kmem.cow_page_ref[index]; 
+  if(ref_cnt != 1) {
     desc((uint64) pa);
     return;
   }
+
+  desc((uint64)pa);
+
 
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
