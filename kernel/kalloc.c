@@ -26,33 +26,39 @@ struct {
   char* new_end;
 } kmem;
 
+struct {
+  struct spinlock lock;
+  char* end_;
+  char* page_ref;
+  int page_cnt;
+} cow_ref;
+
 // 初始化空闲列表
 // 保存从end 到 PHYSTOP 之间的每一页，
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
+  initlock(&cow_ref.lock, "cow_ref");
 
-  // 将内核结束地址往上抬，留出空间作为记录pa引用计数
-  kmem.page_cnt = (PHYSTOP - (uint64)end) / PGSIZE;
-  kmem.new_end = (char*)((uint64) end + kmem.page_cnt);
-  printf("page cnt: %d, new end: %p, end: %p\n", kmem.page_cnt, (uint64)kmem.new_end, (uint64) end);
-  kmem.cow_page_ref = end;
-  
-  // 初始化 引用计数
-  for(int i = 0; i < kmem.page_cnt; i++) {
-    kmem.cow_page_ref[i] = 1;
+  // 初始化 cow_ref 需要记录的变量
+  cow_ref.page_cnt = (PHYSTOP - (uint64) end) / PGSIZE;
+  cow_ref.end_ = (uint64) end + cow_ref.page_cnt;
+  cow_ref.page_ref = end;
+
+  for(int i = (uint64) cow_ref.page_ref; i < cow_ref.page_cnt; i++) {
+    cow_ref.page_ref[i] = 1;
   }
-  printf("page cnt: %d\n", kmem.page_cnt);
+
   freerange(kmem.new_end, (void*)PHYSTOP);
 }
 
-uint64
+int
 get_index(uint64 pa) {
   pa = PGROUNDDOWN(pa);
 
-  uint64 index = (pa - (uint64) kmem.new_end) / PGSIZE;
-  if(index < 0 || index >= kmem.page_cnt) {
+  int index = (pa - (uint64) cow_ref.end_) / PGSIZE;
+  if(index < 0 || index >= cow_ref.page_cnt) {
     printf("index: %d\n", index);
     printf("pa: %p, kmem new_end: %p\n", pa, kmem.new_end);
     panic("ref index illegl");
@@ -66,10 +72,10 @@ void
 insr(uint64 pa) {
   pa = PGROUNDDOWN(pa);
   // get index 
-  uint64 index = get_index(pa);
-  acquire(&kmem.lock);
-  kmem.cow_page_ref[index]++;
-  release(&kmem.lock);
+  int index = get_index(pa);
+  acquire(&cow_ref.lock);
+  cow_ref.page_ref[index]++;
+  release(&cow_ref.lock);
 }
 
 // 减少引用计数
@@ -77,10 +83,10 @@ void
 desc(uint64 pa) {
   pa = PGROUNDDOWN(pa);
   // get index 
-  uint64 index = get_index(pa);
-  acquire(&kmem.lock);
-  kmem.cow_page_ref[index]--;
-  release(&kmem.lock);
+  int index = get_index(pa);
+  acquire(&cow_ref.lock);
+  cow_ref.page_ref[index]--;
+  release(&cow_ref.lock);
 }
 
 void
@@ -100,21 +106,19 @@ kfree(void *pa)
 {
   struct run *r;
 
-  
-  // get pa ref 
-  // 如果引用 > 0, 则不进行释放
-  // get pa index
-  uint64 index = get_index((uint64) pa);
-  // 对引用计数-1
-  desc((uint64) pa);
-  // get ref 
-  uint64 ref_cnt = kmem.cow_page_ref[index]; 
-  if(ref_cnt != 0) {
-    return;
-  }
-
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
+  
+  acquire(&cow_ref.lock);
+  desc((uint64) pa);
+  uint64 index = get_index((uint64) pa);
+  int ref_cnt = cow_ref.page_ref[index];
+  if(ref_cnt != 0) {
+    release(&cow_ref.lock);
+    return;
+  } else {
+    release(&cow_ref.lock);
+  }
 
   //填充垃圾以捕获悬挂的引用。
   memset(pa, 1, PGSIZE);
