@@ -91,8 +91,11 @@ freerange(void *pa_start, void *pa_end)
 {
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
-  for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
+  printf("freerange");
+  for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE) {
+    printf("for freerange");
     kfree(p);
+  }
 }
 //释放 v 指向的物理内存页，
 //通常应该由 a 返回
