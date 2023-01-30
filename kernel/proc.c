@@ -54,8 +54,8 @@ cpuid()
   return id;
 }
 
-// Return this CPU's cpu struct.
-// Interrupts must be disabled.
+//返回这个 CPU 的 cpu 结构。
+//必须禁用中断。
 struct cpu*
 mycpu(void) {
   int id = cpuid();

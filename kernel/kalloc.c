@@ -23,6 +23,7 @@ struct {
   struct run *freelist;
   char* cow_page_ref;
   uint64 page_cnt;
+  char* new_end;
 } kmem;
 
 // 初始化空闲列表
@@ -34,7 +35,7 @@ kinit()
 
   // 将内核结束地址往上抬，留出空间作为记录pa引用计数
   kmem.page_cnt = (PHYSTOP - (uint64)end) / PGSIZE;
-  uint64 new_end = (uint64) end + kmem.page_cnt;
+  kmem.new_end = (uint64) end + kmem.page_cnt;
   kmem.cow_page_ref = end;
   
   // 初始化 引用计数
@@ -42,13 +43,13 @@ kinit()
     kmem.cow_page_ref[i] = 0;
   }
   // printf("page cnt: %d\n", kmem.page_cnt);
-  freerange((char*) new_end, (void*)PHYSTOP);
+  freerange(kmem.new_end, (void*)PHYSTOP);
 }
 
 uint64
 get_index(uint64 pa) {
   pa = PGROUNDDOWN(pa);
-  return (pa - (uint64)end) / PGSIZE;
+  return (pa - (uint64) kmem.new_end) / PGSIZE;
 }
 
 // 增加引用计数
