@@ -32,7 +32,6 @@ struct cow_ref {
 
 void
 ref_init() {
-    initlock(&ref.lock, "ref");
     ref.page_cnt = PHYSTOP - (uint64) end;
     ref.page_ref = end;
     ref.end_ = ref.page_ref + ref.page_cnt;
@@ -82,8 +81,10 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
+  initlock(&ref.lock, "ref");
   ref_init();
   freerange(ref.end_, (void*)PHYSTOP);
+    printf("freerange end\n");
 }
 
 void
