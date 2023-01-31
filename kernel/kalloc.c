@@ -108,9 +108,9 @@ kfree(void *pa)
     panic("kfree");
 
   desc((uint64) pa);
-  acquire(&ref.lock);
+//  acquire(&ref.lock);
   int page_ref = get_pa_ref((uint64) pa);
-  release(&ref.lock);
+//  release(&ref.lock);
 
   if(page_ref == 0) {
       // Fill with junk to catch dangling refs.
