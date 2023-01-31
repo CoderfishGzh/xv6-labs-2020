@@ -33,52 +33,52 @@ struct cow_ref {
 } ref;
 
 
-void
-ref_init() {
-    ref.page_cnt = PHYSTOP - (uint64) end;
-    ref.page_ref = end;
-    ref.end_ = ref.page_ref + ref.page_cnt;
-    // set the ref = 0
-    for(int i = 0; i < ref.page_cnt; i++) {
-        ref.page_ref[i] = 1;
-    }
-}
+//void
+//ref_init() {
+//    ref.page_cnt = PHYSTOP - (uint64) end;
+//    ref.page_ref = end;
+//    ref.end_ = ref.page_ref + ref.page_cnt;
+//    // set the ref = 0
+//    for(int i = 0; i < ref.page_cnt; i++) {
+//        ref.page_ref[i] = 1;
+//    }
+//}
+//
+//int
+//pa2index(uint64 pa) {
+//    pa = PGROUNDDOWN(pa);
+//    int index = (pa - (uint64) ref.end_) / PGSIZE;
+//    if(index < 0 || index >= ref.page_cnt) {
+//        panic("pa2index: index illegal");
+//    }
+//    return index;
+//}
+//
+//void
+//incr(uint64 pa) {
+//    int index = pa2index(pa);
+//    acquire(&ref.lock);
+//    ref.page_ref[index]++;
+//    release(&ref.lock);
+//}
+//
+//void
+//desc(uint64 pa) {
+//    int index = pa2index(pa);
+//    acquire(&ref.lock);
+//    ref.page_ref[index]--;
+//    if(ref.page_ref[index] < 0) {
+//        panic("panic: desc page_ref < 0");
+//    }
+//
+//    release(&ref.lock);
+//}
 
-int
-pa2index(uint64 pa) {
-    pa = PGROUNDDOWN(pa);
-    int index = (pa - (uint64) ref.end_) / PGSIZE;
-    if(index < 0 || index >= ref.page_cnt) {
-        panic("pa2index: index illegal");
-    }
-    return index;
-}
-
-void
-incr(uint64 pa) {
-    int index = pa2index(pa);
-    acquire(&ref.lock);
-    ref.page_ref[index]++;
-    release(&ref.lock);
-}
-
-void
-desc(uint64 pa) {
-    int index = pa2index(pa);
-    acquire(&ref.lock);
-    ref.page_ref[index]--;
-    if(ref.page_ref[index] < 0) {
-        panic("panic: desc page_ref < 0");
-    }
-
-    release(&ref.lock);
-}
-
-int
-get_pa_ref(uint64 pa) {
-    int index = pa2index(pa);
-    return ref.page_ref[index];
-}
+//int
+//get_pa_ref(uint64 pa) {
+//    int index = pa2index(pa);
+//    return ref.page_ref[index];
+//}
 
 int kaddrefcnt(void* pa) {
     if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
