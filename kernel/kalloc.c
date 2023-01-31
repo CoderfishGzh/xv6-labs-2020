@@ -23,11 +23,63 @@ struct {
   struct run *freelist;
 } kmem;
 
+struct cow_ref {
+    struct spinlock lock;
+    int page_cnt;
+    char* page_ref;
+    char* end_;
+} ref;
+
+void
+ref_init() {
+    initlock(&ref.lock, "ref");
+    ref.page_cnt = PHYSTOP - (uint64) end;
+    ref.page_ref = end;
+    ref.end_ = ref.page_ref + ref.page_cnt;
+    // set the ref = 0
+    for(int i = 0; i < ref.page_cnt; i++) {
+        ref.page_ref[i] = 0;
+    }
+}
+
+int
+pa2index(uint64 pa) {
+    pa = PGROUNDDOWN(pa);
+    int index = (pa - (uint64) ref.end_) / PGSIZE;
+    if(index < 0 || index >= ref.page_cnt) {
+        panic("pa2index: index illegal");
+    }
+    return index;
+}
+
+void
+incr(uint64 pa) {
+    int index = pa2index(pa);
+    acquire(&ref.lock);
+    ref.page_ref[index]++;
+    release(&ref.lock);
+}
+
+void
+desc(uint64 pa) {
+    int index = pa2index(pa);
+    acquire(&ref.lock);
+    ref.page_ref[index]--;
+    release(&ref.lock);
+}
+
+int
+get_pa_ref(uint64 pa) {
+    int index = pa2index(pa);
+    return ref.page_ref[index];
+}
+
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  freerange(end, (void*)PHYSTOP);
+  ref_init();
+  freerange(ref.end_, (void*)PHYSTOP);
 }
 
 void
@@ -51,15 +103,22 @@ kfree(void *pa)
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-  // Fill with junk to catch dangling refs.
-  memset(pa, 1, PGSIZE);
+  // 当调用kfree时，如果 page ref == 1,需要清除page， 否则单纯对引用计数进行--
+  // get index
+  int index = pa2index((uint64) pa);
+  if(index == 1) {
+      // Fill with junk to catch dangling refs.
+      memset(pa, 1, PGSIZE);
 
-  r = (struct run*)pa;
+      r = (struct run*)pa;
 
-  acquire(&kmem.lock);
-  r->next = kmem.freelist;
-  kmem.freelist = r;
-  release(&kmem.lock);
+      acquire(&kmem.lock);
+      r->next = kmem.freelist;
+      kmem.freelist = r;
+      release(&kmem.lock);
+  } else {
+      desc(pa);
+  }
 }
 
 // Allocate one 4096-byte page of physical memory.
@@ -72,11 +131,18 @@ kalloc(void)
 
   acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r)
-    kmem.freelist = r->next;
+  if(r) {
+      kmem.freelist = r->next;
+      acquire(&ref.lock);
+      int index = pa2index((uint64) r);
+      ref.page_ref[index] = 1;
+      release(&ref.lock);
+  }
   release(&kmem.lock);
 
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
 }
+
+

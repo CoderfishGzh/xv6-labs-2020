@@ -320,13 +320,23 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
       panic("uvmcopy: page not present");
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
+
+//    if((mem = kalloc()) == 0)
+//      goto err;
+//    memmove(mem, (char*)pa, PGSIZE);
+
+    if(flags & PTE_W) {
+        // 禁用写并设置COW Fork标记
+        flags = (flags | PTE_COW) & ~PTE_W;
+        *pte = PA2PTE(pa) | flags;
+    }
+
     if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
       kfree(mem);
       goto err;
     }
+
+    incr(pa);
   }
   return 0;
 
@@ -439,4 +449,67 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+
+int
+is_cow_fault(pagetable_t pagetable, uint64 va) {
+    va = PGROUNDDOWN(va);
+    pte_t* pte = walk(pagetable, va, 0);
+    if(pte == 0) {
+        return -1;
+    }
+    if((*pte & PTE_V) == 0) {
+        return -1;
+    }
+    return (*pte & PTE_COW? 0 : -1);
+}
+
+
+// * @return 分配后的物理地址，如果返回0则分配失败
+void*
+cow_alloc(pagetable_t pagetable, uint64 va) {
+    va = PGROUNDDOWN(va);
+
+    // get pa
+    uint64 pa = walkaddr(pagetable, va);
+    if(pa == 0) {
+        return 0;
+    }
+
+    // get pte
+    pte_t* pte = walk(pagetable, va, 0);
+
+    // get page ref
+    int pa_ref = get_pa_ref(pa);
+
+    // 仅剩一个进程对该pa进行引用
+    // 则直接修改对应的PTE
+    if(pa_ref == 1) {
+        *pte |= PTE_W;
+        *pte &= ~PTE_COW;
+        return (void*) pa;
+    } else {
+        // 多个进程对pa进行引用
+        // 创建新的page，拷贝旧的page
+        char* mem = kalloc();
+        if(mem == 0) {
+            return 0;
+        }
+
+        memmove(mem, (void*) pa, PGSIZE);
+
+        *pte &= ~PTE_V;
+
+        // 映射
+        if(mappages(pagetable, va, PGSIZE, (uint64) mem, (PTE_FLAGS(*pte) | PTE_W) & ~PTE_COW) != 0) {
+            kfree(mem);
+            *pte |= PTE_V;
+            return 0;
+        }
+
+        // 将原来的引用计数--
+        kfree((char*) pa);
+        return mem;
+    }
+
 }
