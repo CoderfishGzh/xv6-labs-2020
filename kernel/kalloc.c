@@ -117,7 +117,7 @@ kfree(void *pa)
       kmem.freelist = r;
       release(&kmem.lock);
   } else {
-      desc(pa);
+      desc((uint64) pa);
   }
 }
 
