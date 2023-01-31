@@ -109,6 +109,7 @@ kfree(void *pa)
 
   // 当调用kfree时，如果 page ref == 1,需要清除page， 否则单纯对引用计数进行--
   int page_ref = get_pa_ref((uint64) pa);
+  printf("kfree: page_ref: %d\n", page_ref);
   if(page_ref == 1) {
       // Fill with junk to catch dangling refs.
       memset(pa, 1, PGSIZE);
