@@ -104,9 +104,8 @@ kfree(void *pa)
     panic("kfree");
 
   // 当调用kfree时，如果 page ref == 1,需要清除page， 否则单纯对引用计数进行--
-  // get index
-  int index = pa2index((uint64) pa);
-  if(index == 1) {
+  int page_ref = get_pa_ref((uint64) pa);
+  if(page_ref == 1) {
       // Fill with junk to catch dangling refs.
       memset(pa, 1, PGSIZE);
 
