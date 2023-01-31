@@ -331,7 +331,7 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
         *pte = PA2PTE(pa) | flags;
     }
 
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
+    if(mappages(new, i, PGSIZE, pa, flags) != 0){
       kfree(mem);
       goto err;
     }
