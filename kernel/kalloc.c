@@ -35,6 +35,7 @@ struct {
 void
 kinit()
 {
+  // 初始化lock
   initlock(&kmem.lock, "kmem");
   initlock(&cow_ref.lock, "cow_ref");
   // 初始化 cow_ref 需要记录的变量
@@ -44,10 +45,10 @@ kinit()
   cow_ref.end_ = cow_ref.page_ref + cow_ref.page_cnt;
 
   for(int i = 0; i < cow_ref.page_cnt; i++) {
-    cow_ref.page_ref[i] = 1;
+    cow_ref.page_ref[i] = 0;
   }
   freerange(cow_ref.end_, (void*)PHYSTOP);
-  printf("after freerange");
+  printf("after freerange\n");
 }
 
 int
@@ -107,7 +108,6 @@ kfree(void *pa)
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-  
   desc((uint64) pa);
   acquire(&cow_ref.lock);
   uint64 index = get_index((uint64) pa);

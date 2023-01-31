@@ -73,7 +73,7 @@ usertrap(void)
     // 判断是否是 COW
     if(is_cow_fault(p->pagetable, va)) {
       // 进行page分配
-      printf("is cow\n");
+      // printf("is cow\n");
       if(cow_allow(p->pagetable, va) < 0) {
         p->killed = 1;
       }
