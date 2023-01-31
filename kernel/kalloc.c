@@ -65,6 +65,10 @@ desc(uint64 pa) {
     int index = pa2index(pa);
     acquire(&ref.lock);
     ref.page_ref[index]--;
+    if(ref.page_ref[index] < 0) {
+        panic("panic: desc page_ref < 0");
+    }
+
     release(&ref.lock);
 }
 
