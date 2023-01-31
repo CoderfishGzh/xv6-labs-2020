@@ -133,43 +133,46 @@ kfree(void *pa)
     panic("kfree");
 
 //  desc((uint64) pa);
-////  acquire(&ref.lock);
+  acquire(&ref.lock);
 //  int page_ref = get_pa_ref((uint64) pa);
-////  release(&ref.lock);
+    ref.cnt[(uint64)pa / PGSIZE] -= 1;
+    int page_ref = krefcnt(pa);
+
+
+  if(page_ref == 0) {
+      release(&ref.lock);
+      // Fill with junk to catch dangling refs.
+      printf("page ref == 0\n");
+      memset(pa, 1, PGSIZE);
+
+      r = (struct run*)pa;
+
+      acquire(&kmem.lock);
+      r->next = kmem.freelist;
+      kmem.freelist = r;
+      release(&kmem.lock);
+  } else {
+      release(&ref.lock);
+  }
+
+//    // 只有当引用计数为0了才回收空间
+//    // 否则只是将引用计数减1
+//    acquire(&ref.lock);
+//    if(--ref.cnt[(uint64)pa / PGSIZE] == 0) {
+//        release(&ref.lock);
 //
-//  if(page_ref == 0) {
-//      // Fill with junk to catch dangling refs.
-//      printf("page ref == 0\n");
-//      memset(pa, 1, PGSIZE);
+//        r = (struct run*)pa;
 //
-//      r = (struct run*)pa;
+//        // Fill with junk to catch dangling refs.
+//        memset(pa, 1, PGSIZE);
 //
-//      acquire(&kmem.lock);
-//      r->next = kmem.freelist;
-//      kmem.freelist = r;
-//      release(&kmem.lock);
-//  } else {
-//      printf("page ref not 0\n");
-//  }
-
-    // 只有当引用计数为0了才回收空间
-    // 否则只是将引用计数减1
-    acquire(&ref.lock);
-    if(--ref.cnt[(uint64)pa / PGSIZE] == 0) {
-        release(&ref.lock);
-
-        r = (struct run*)pa;
-
-        // Fill with junk to catch dangling refs.
-        memset(pa, 1, PGSIZE);
-
-        acquire(&kmem.lock);
-        r->next = kmem.freelist;
-        kmem.freelist = r;
-        release(&kmem.lock);
-    } else {
-        release(&ref.lock);
-    }
+//        acquire(&kmem.lock);
+//        r->next = kmem.freelist;
+//        kmem.freelist = r;
+//        release(&kmem.lock);
+//    } else {
+//        release(&ref.lock);
+//    }
 
 }
 
