@@ -178,6 +178,7 @@ int             copyinstr(pagetable_t, char *, uint64, uint64);
 int             is_cow_fault(pagetable_t pagetable, uint64 va);
 void*           cow_alloc(pagetable_t pagetable, uint64 va);
 int             kaddrefcnt(void* pa);
+int             krefcnt(void* pa);
 
 // plic.c
 void            plicinit(void);

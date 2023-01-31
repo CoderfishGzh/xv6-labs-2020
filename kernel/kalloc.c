@@ -89,6 +89,10 @@ int kaddrefcnt(void* pa) {
     return 0;
 }
 
+int krefcnt(void* pa) {
+    return ref.cnt[(uint64)pa / PGSIZE];
+}
+
 void
 kinit()
 {

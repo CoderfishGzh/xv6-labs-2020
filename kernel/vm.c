@@ -528,7 +528,7 @@ cow_alloc(pagetable_t pagetable, uint64 va) {
         // 只剩一个进程对此物理地址存在引用
         // 则直接修改对应的PTE即可
         *pte |= PTE_W;
-        *pte &= ~PTE_F;
+        *pte &= ~PTE_COW;
         return (void*)pa;
     } else {
         // 多个进程对物理内存存在引用
