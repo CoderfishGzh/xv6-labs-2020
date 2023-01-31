@@ -37,7 +37,7 @@ ref_init() {
     ref.end_ = ref.page_ref + ref.page_cnt;
     // set the ref = 0
     for(int i = 0; i < ref.page_cnt; i++) {
-        ref.page_ref[i] = 0;
+        ref.page_ref[i] = 1;
     }
 }
 
@@ -84,7 +84,6 @@ kinit()
   initlock(&ref.lock, "ref");
   ref_init();
   freerange(ref.end_, (void*)PHYSTOP);
-    printf("freerange end\n");
 }
 
 void
@@ -108,10 +107,12 @@ kfree(void *pa)
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-  // 当调用kfree时，如果 page ref == 1,需要清除page， 否则单纯对引用计数进行--
+  desc((uint64) pa);
+  acquire(&ref.lock);
   int page_ref = get_pa_ref((uint64) pa);
-  printf("kfree: page_ref: %d\n", page_ref);
-  if(page_ref == 1) {
+  release(&ref.lock);
+
+  if(page_ref == 0) {
       // Fill with junk to catch dangling refs.
       memset(pa, 1, PGSIZE);
 
@@ -122,8 +123,9 @@ kfree(void *pa)
       kmem.freelist = r;
       release(&kmem.lock);
   } else {
-      desc((uint64) pa);
+
   }
+
 }
 
 // Allocate one 4096-byte page of physical memory.
