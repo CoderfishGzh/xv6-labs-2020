@@ -471,7 +471,7 @@ is_cow_fault(pagetable_t pagetable, uint64 va) {
 // * @return 分配后的物理地址，如果返回0则分配失败
 void*
 cow_alloc(pagetable_t pagetable, uint64 va) {
-//    va = PGROUNDDOWN(va);
+    va = PGROUNDDOWN(va);
 //
 //    // get pa
 //    uint64 pa = walkaddr(pagetable, va);
