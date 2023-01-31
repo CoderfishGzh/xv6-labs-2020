@@ -81,8 +81,8 @@ usertrap(void)
 
       uint64 fault_va = r_stval();  // 获取出错的虚拟地址
       if(fault_va >= p->sz
-         || cowpage(p->pagetable, fault_va) != 0
-         || cowalloc(p->pagetable, PGROUNDDOWN(fault_va)) == 0)
+         || is_cow_fault(p->pagetable, fault_va) != 0
+         || cow_alloc(p->pagetable, PGROUNDDOWN(fault_va)) == 0)
           p->killed = 1;
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
