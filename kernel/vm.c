@@ -544,7 +544,7 @@ cow_alloc(pagetable_t pagetable, uint64 va) {
         *pte &= ~PTE_V;
 
         // 为新页面添加映射
-        if(mappages(pagetable, va, PGSIZE, (uint64)mem, (PTE_FLAGS(*pte) | PTE_W) & ~PTE_F) != 0) {
+        if(mappages(pagetable, va, PGSIZE, (uint64)mem, (PTE_FLAGS(*pte) | PTE_W) & ~PTE_COW) != 0) {
             kfree(mem);
             *pte |= PTE_V;
             return 0;
