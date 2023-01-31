@@ -109,15 +109,15 @@ kfree(void *pa)
     panic("kfree");
 
   desc((uint64) pa);
-  acquire(&cow_ref.lock);
+  // acquire(&cow_ref.lock);
   uint64 index = get_index((uint64) pa);
   int ref_cnt = cow_ref.page_ref[index];
   if(ref_cnt != 0) {
-    release(&cow_ref.lock);
+    // release(&cow_ref.lock);
     return;
   }
 
-  release(&cow_ref.lock);
+  // release(&cow_ref.lock);
   
 
   //填充垃圾以捕获悬挂的引用。
