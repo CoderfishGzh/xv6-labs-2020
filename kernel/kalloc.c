@@ -25,60 +25,9 @@ struct {
 
 struct cow_ref {
     struct spinlock lock;
-//    int page_cnt;
-//    char* page_ref;
-//    char* end_;
-
     int cnt[PHYSTOP / PGSIZE];  // 引用计数
 } ref;
 
-
-//void
-//ref_init() {
-//    ref.page_cnt = PHYSTOP - (uint64) end;
-//    ref.page_ref = end;
-//    ref.end_ = ref.page_ref + ref.page_cnt;
-//    // set the ref = 0
-//    for(int i = 0; i < ref.page_cnt; i++) {
-//        ref.page_ref[i] = 1;
-//    }
-//}
-//
-//int
-//pa2index(uint64 pa) {
-//    pa = PGROUNDDOWN(pa);
-//    int index = (pa - (uint64) ref.end_) / PGSIZE;
-//    if(index < 0 || index >= ref.page_cnt) {
-//        panic("pa2index: index illegal");
-//    }
-//    return index;
-//}
-//
-//void
-//incr(uint64 pa) {
-//    int index = pa2index(pa);
-//    acquire(&ref.lock);
-//    ref.page_ref[index]++;
-//    release(&ref.lock);
-//}
-//
-//void
-//desc(uint64 pa) {
-//    int index = pa2index(pa);
-//    acquire(&ref.lock);
-//    ref.page_ref[index]--;
-//    if(ref.page_ref[index] < 0) {
-//        panic("panic: desc page_ref < 0");
-//    }
-//
-//    release(&ref.lock);
-//}
-
-//int
-//get_pa_ref(uint64 pa) {
-//    int index = pa2index(pa);
-//    return ref.page_ref[index];
-//}
 
 int kaddrefcnt(void* pa) {
     if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
@@ -98,19 +47,12 @@ kinit()
 {
   initlock(&kmem.lock, "kmem");
   initlock(&ref.lock, "ref");
-//  ref_init();
-//  freerange(ref.end_, (void*)PHYSTOP);
     freerange(end, (void*)PHYSTOP);
 }
 
 void
 freerange(void *pa_start, void *pa_end)
 {
-//  char *p;
-//  p = (char*)PGROUNDUP((uint64)pa_start);
-//  for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
-//    kfree(p);
-
     char *p;
     p = (char*)PGROUNDUP((uint64)pa_start);
     for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE) {
@@ -132,17 +74,10 @@ kfree(void *pa)
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-//  desc((uint64) pa);
   acquire(&ref.lock);
-//  int page_ref = get_pa_ref((uint64) pa);
-    ref.cnt[(uint64)pa / PGSIZE] -= 1;
-    int page_ref = krefcnt(pa);
-
-
-  if(page_ref == 0) {
+    if(--ref.cnt[(uint64)pa / PGSIZE] == 0) {
       release(&ref.lock);
       // Fill with junk to catch dangling refs.
-//      printf("page ref == 0\n");
       memset(pa, 1, PGSIZE);
 
       r = (struct run*)pa;
@@ -182,25 +117,21 @@ kfree(void *pa)
 void *
 kalloc(void)
 {
-  struct run *r;
+    struct run *r;
 
-  acquire(&kmem.lock);
-  r = kmem.freelist;
-  if(r) {
-      kmem.freelist = r->next;
-//      acquire(&ref.lock);
-//      int index = pa2index((uint64) r);
-//      ref.page_ref[index] = 1;
-//      release(&ref.lock);
-      acquire(&ref.lock);
-      ref.cnt[(uint64)r / PGSIZE] = 1;  // 将引用计数初始化为1
-      release(&ref.lock);
-  }
-  release(&kmem.lock);
+    acquire(&kmem.lock);
+    r = kmem.freelist;
+    if(r) {
+        kmem.freelist = r->next;
+        acquire(&ref.lock);
+        ref.cnt[(uint64)r / PGSIZE] = 1;  // 将引用计数初始化为1
+        release(&ref.lock);
+    }
+    release(&kmem.lock);
 
-  if(r)
-    memset((char*)r, 5, PGSIZE); // fill with junk
-  return (void*)r;
+    if(r)
+        memset((char*)r, 5, PGSIZE); // fill with junk
+    return (void*)r;
 }
 
 

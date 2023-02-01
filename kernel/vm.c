@@ -480,87 +480,87 @@ void*
 cow_alloc(pagetable_t pagetable, uint64 va) {
     va = PGROUNDDOWN(va);
 
-    // get pa
-    uint64 pa = walkaddr(pagetable, va);
-    if(pa == 0) {
-        return 0;
-    }
-
-    // get pte
-    pte_t* pte = walk(pagetable, va, 0);
-
-    // get page ref
-//    int pa_ref = get_pa_ref(pa);
-    int pa_ref = krefcnt((void*) pa);
-
-    // 仅剩一个进程对该pa进行引用
-    // 则直接修改对应的PTE
-    if(pa_ref == 1) {
-        *pte |= PTE_W;
-        *pte &= ~PTE_COW;
-        return (void*) pa;
-    } else {
-        // 多个进程对pa进行引用
-        // 创建新的page，拷贝旧的page
-        char* mem = kalloc();
-        if(mem == 0) {
-            return 0;
-        }
-
-        memmove(mem, (void*) pa, PGSIZE);
-
-        *pte &= ~PTE_V;
-
-        // 映射
-        if(mappages(pagetable, va, PGSIZE, (uint64) mem, (PTE_FLAGS(*pte) | PTE_W) & ~PTE_COW) != 0) {
-            kfree(mem);
-            *pte |= PTE_V;
-            return 0;
-        }
-
-        // 将原来的引用计数--
-        kfree((char*) pa);
-        return mem;
-    }
-
-//    if(va % PGSIZE != 0)
+//    // get pa
+//    uint64 pa = walkaddr(pagetable, va);
+//    if(pa == 0) {
 //        return 0;
+//    }
 //
-//    uint64 pa = walkaddr(pagetable, va);  // 获取对应的物理地址
-//    if(pa == 0)
-//        return 0;
+//    // get pte
+//    pte_t* pte = walk(pagetable, va, 0);
 //
-//    pte_t* pte = walk(pagetable, va, 0);  // 获取对应的PTE
+//    // get page ref
+////    int pa_ref = get_pa_ref(pa);
+//    int pa_ref = krefcnt((void*) pa);
 //
-//    if(krefcnt((char*)pa) == 1) {
-//        // 只剩一个进程对此物理地址存在引用
-//        // 则直接修改对应的PTE即可
+//    // 仅剩一个进程对该pa进行引用
+//    // 则直接修改对应的PTE
+//    if(pa_ref == 1) {
 //        *pte |= PTE_W;
 //        *pte &= ~PTE_COW;
-//        return (void*)pa;
+//        return (void*) pa;
 //    } else {
-//        // 多个进程对物理内存存在引用
-//        // 需要分配新的页面，并拷贝旧页面的内容
+//        // 多个进程对pa进行引用
+//        // 创建新的page，拷贝旧的page
 //        char* mem = kalloc();
-//        if(mem == 0)
+//        if(mem == 0) {
 //            return 0;
+//        }
 //
-//        // 复制旧页面内容到新页
-//        memmove(mem, (char*)pa, PGSIZE);
+//        memmove(mem, (void*) pa, PGSIZE);
 //
-//        // 清除PTE_V，否则在mappagges中会判定为remap
 //        *pte &= ~PTE_V;
 //
-//        // 为新页面添加映射
-//        if(mappages(pagetable, va, PGSIZE, (uint64)mem, (PTE_FLAGS(*pte) | PTE_W) & ~PTE_COW) != 0) {
+//        // 映射
+//        if(mappages(pagetable, va, PGSIZE, (uint64) mem, (PTE_FLAGS(*pte) | PTE_W) & ~PTE_COW) != 0) {
 //            kfree(mem);
 //            *pte |= PTE_V;
 //            return 0;
 //        }
 //
-//        // 将原来的物理内存引用计数减1
-//        kfree((char*)PGROUNDDOWN(pa));
+//        // 将原来的引用计数--
+//        kfree((char*) pa);
 //        return mem;
 //    }
+
+    if(va % PGSIZE != 0)
+        return 0;
+
+    uint64 pa = walkaddr(pagetable, va);  // 获取对应的物理地址
+    if(pa == 0)
+        return 0;
+
+    pte_t* pte = walk(pagetable, va, 0);  // 获取对应的PTE
+
+    if(krefcnt((char*)pa) == 1) {
+        // 只剩一个进程对此物理地址存在引用
+        // 则直接修改对应的PTE即可
+        *pte |= PTE_W;
+        *pte &= ~PTE_COW;
+        return (void*)pa;
+    } else {
+        // 多个进程对物理内存存在引用
+        // 需要分配新的页面，并拷贝旧页面的内容
+        char* mem = kalloc();
+        if(mem == 0)
+            return 0;
+
+        // 复制旧页面内容到新页
+        memmove(mem, (char*)pa, PGSIZE);
+
+        // 清除PTE_V，否则在mappagges中会判定为remap
+        *pte &= ~PTE_V;
+
+        // 为新页面添加映射
+        if(mappages(pagetable, va, PGSIZE, (uint64)mem, (PTE_FLAGS(*pte) | PTE_W) & ~PTE_COW) != 0) {
+            kfree(mem);
+            *pte |= PTE_V;
+            return 0;
+        }
+
+        // 将原来的物理内存引用计数减1
+        kfree((char*)PGROUNDDOWN(pa));
+        return mem;
+    }
 
 }
