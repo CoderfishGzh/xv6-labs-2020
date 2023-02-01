@@ -142,7 +142,7 @@ kfree(void *pa)
   if(page_ref == 0) {
       release(&ref.lock);
       // Fill with junk to catch dangling refs.
-      printf("page ref == 0\n");
+//      printf("page ref == 0\n");
       memset(pa, 1, PGSIZE);
 
       r = (struct run*)pa;
