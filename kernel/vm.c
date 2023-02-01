@@ -463,6 +463,10 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 
 int
 is_cow_fault(pagetable_t pagetable, uint64 va) {
+    if(va >= MAXVA) {
+        return -1;
+    }
+
     va = PGROUNDDOWN(va);
     pte_t* pte = walk(pagetable, va, 0);
     if(pte == 0) {
