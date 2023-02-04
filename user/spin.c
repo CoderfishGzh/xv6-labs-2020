@@ -15,6 +15,7 @@ main(int argc, char *argv[]) {
         c = '/';
     } else {
         printf("parent pid is %d, child is %d\n", getpid(), pid);
+        c = '\\';
     }
 
     for(int i = 0; ; i++) {

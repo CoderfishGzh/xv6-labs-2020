@@ -15,9 +15,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0295977b-362b-4a7e-adfc-274f6bf663cb" name="变更" comment="">
-      <change beforePath="$PROJECT_DIR$/kernel/swtch.S" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/swtch.S" afterDir="false" />
-    </list>
+    <list default="true" id="0295977b-362b-4a7e-adfc-274f6bf663cb" name="变更" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -115,7 +113,7 @@
       <workItem from="1675129975200" duration="150000" />
       <workItem from="1675130132058" duration="825000" />
       <workItem from="1675130972052" duration="23218000" />
-      <workItem from="1675503100863" duration="2552000" />
+      <workItem from="1675503100863" duration="3171000" />
     </task>
     <servers />
   </component>
