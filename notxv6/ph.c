@@ -17,6 +17,16 @@ struct entry *table[NBUCKET];
 int keys[NKEYS];
 int nthread = 1;
 
+// 定义 NBUCKET 个lock
+pthread_mutex_t lock[NBUCKET];
+
+void
+init_lock() {
+  for(int i = 0; i < NBUCKET; i++) {
+    pthread_mutex_init(&lock[i], NULL);
+  }
+}
+
 double
 now()
 {
@@ -28,16 +38,20 @@ now()
 static void 
 insert(int key, int value, struct entry **p, struct entry *n)
 {
+  // 申请 entry 的空间
   struct entry *e = malloc(sizeof(struct entry));
+  // 设置 entry 的 key value n
   e->key = key;
   e->value = value;
   e->next = n;
+  // 返回 new entry 的地址
   *p = e;
 }
 
 static 
 void put(int key, int value)
 {
+  // 判断 key 归属于哪一个 hash 桶
   int i = key % NBUCKET;
 
   // is the key already present?
@@ -46,13 +60,21 @@ void put(int key, int value)
     if (e->key == key)
       break;
   }
+  
+  pthread_mutex_lock(&lock[i]);
+
+  // 遍历 table 后，e != 0,代表值存在
   if(e){
     // update the existing key.
+    // 更新 value
     e->value = value;
   } else {
     // the new is new.
+    // entry not exit, create and insert 
     insert(key, value, &table[i], table[i]);
   }
+
+  pthread_mutex_unlock(&lock[i]);
 }
 
 static struct entry*
@@ -111,9 +133,13 @@ main(int argc, char *argv[])
   tha = malloc(sizeof(pthread_t) * nthread);
   srandom(0);
   assert(NKEYS % nthread == 0);
+  // 随机生成 key
   for (int i = 0; i < NKEYS; i++) {
     keys[i] = random();
   }
+
+  // init lock
+  init_lock();
 
   //
   // first the puts
