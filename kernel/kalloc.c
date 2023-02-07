@@ -24,6 +24,8 @@ struct run {
 
 struct nkmem{
     struct spinlock lock;
+    // 统计 free page cnt
+    int free_page_cnt;
     struct run *freelist;
 };
 
@@ -31,11 +33,11 @@ struct nkmem{
 struct nkmem cpu_kmem[NCPU];
 
 void
-init_kmem_lock() {
+init_kmem_lock_and_cnt() {
     for(int i = 0; i < NCPU; i++) {
         char buffer[6];
         snprintf(buffer, 6, "kmem_%d", i);
-        printf("now is: %s\n", buffer);
+        cpu_kmem[i].free_page_cnt = 0;
         initlock(&cpu_kmem[i].lock, buffer);
     }
 }
@@ -56,6 +58,7 @@ freerange(void *pa_start, void *pa_end)
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
 }
+
 
 // Free the page of physical memory pointed at by v,
 // which normally should have been returned by a
@@ -83,6 +86,7 @@ kfree(void *pa)
   acquire(&cpu_kmem[cpu_id].lock);
   r->next = cpu_kmem[cpu_id].freelist;
   cpu_kmem[cpu_id].freelist = r;
+  cpu_kmem[cpu_id].free_page_cnt++;
   release(&cpu_kmem[cpu_id].lock);
 
 //  acquire(&kmem.lock);
@@ -90,6 +94,45 @@ kfree(void *pa)
 //  kmem.freelist = r;
 //  release(&kmem.lock);
 }
+
+void*
+steal_freepage() {
+    push_off();
+    int my_cpu = cpuid();
+    pop_off();
+
+    int target_cpu = -1;
+
+    // 自己的cpu不用检查,因为在locking状态，不会有kfree的情况出现
+    for(int i = 0; i < NCPU; i++) {
+        // 如果是自己则跳过
+        if(i == my_cpu) {
+            continue;
+        }
+        // 没有空闲page跳过
+        acquire(cpu_kmem[i].lock);
+        if(cpu_kmem[i].free_page_cnt == 0) {
+            release(cpu_kmem[i].lock);
+            continue;
+        } else {
+            // 找到拥有空闲page的cpu
+            target_cpu = i;
+            break;
+        }
+    }
+
+    struct run *r;
+    // 将target_cpu的空闲page分配出去
+    if(target_cpu != -1) {
+        r = cpu_kmem[target_cpu].freelist;
+        cpu_kmem[target_cpu].freelist = r->next;
+    }
+
+    release(cpu_kmem[i].lock);
+
+    return (void*) r;
+}
+
 
 // 在cpu id对应的freelist分配内存
 void*
@@ -102,9 +145,18 @@ new_kalloc(void) {
     pop_off();
 
     acquire(&cpu_kmem[cpu_id].lock);
+    // 将 r 指向 freelist 头，分配空闲页
     r = cpu_kmem[cpu_id].freelist;
-    if(r)
+
+    if(r) {
+        // 如果 r != 0, 代表有空闲页，将 freelist 头移动到下一个位置
         cpu_kmem[cpu_id].freelist = r->next;
+        cpu_kmem[cpu_id].free_page_cnt--;
+    } else {
+        // 如果 r == 0, 代表没有空闲页
+        // 寻找别的cpu的 freelist 是否还有空闲页
+        r = (struct run*)steal_freepage();
+    }
     release(&cpu_kmem[cpu_id].lock);
 
     if(r)
