@@ -17,10 +17,10 @@ struct run {
   struct run *next;
 };
 
-struct {
-  struct spinlock lock;
-  struct run *freelist;
-} kmem;
+//struct {
+//  struct spinlock lock;
+//  struct run *freelist;
+//} kmem;
 
 struct nkmem{
     struct spinlock lock;
@@ -43,7 +43,7 @@ init_kmem_lock() {
 void
 kinit()
 {
-  initlock(&kmem.lock, "kmem");
+//  initlock(&kmem.lock, "kmem");
   init_kmem_lock();
   freerange(end, (void*)PHYSTOP);
 }
@@ -51,8 +51,6 @@ kinit()
 void
 freerange(void *pa_start, void *pa_end)
 {
-  int cpu_id = cpuid();
-  printf("cpu id: %d\n", cpu_id);
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
@@ -76,10 +74,42 @@ kfree(void *pa)
 
   r = (struct run*)pa;
 
-  acquire(&kmem.lock);
-  r->next = kmem.freelist;
-  kmem.freelist = r;
-  release(&kmem.lock);
+  // get cpu id
+  push_off();
+  int cpu_id = cpuid();
+  pop_off();
+
+  // get cpu_id's kmem_lock
+  acquire(&cpu_kmem[cpu_id].lock);
+  r->next = cpu_kmem[cpu_id].freelist;
+  cpu_kmem[cpu_id].freelist = r;
+  release(&cpu_kmem[cpu_id].lock);
+
+//  acquire(&kmem.lock);
+//  r->next = kmem.freelist;
+//  kmem.freelist = r;
+//  release(&kmem.lock);
+}
+
+// 在cpu id对应的freelist分配内存
+void*
+new_kalloc(void) {
+    struct run *r;
+
+    // get cpu id
+    push_off();
+    int cpu_id = cpuid();
+    pop_off();
+
+    acquire(&cpu_kmem[cpu_id].lock);
+    r = cpu_kmem[cpu_id].freelist;
+    if(r)
+        cpu_kmem[cpu_id].freelist = r->next;
+    release(&cpu_kmem[cpu_id].lock);
+
+    if(r)
+        memset((char*)r, 5, PGSIZE); // fill with junk
+    return (void*)r;
 }
 
 // Allocate one 4096-byte page of physical memory.
@@ -88,15 +118,16 @@ kfree(void *pa)
 void *
 kalloc(void)
 {
-  struct run *r;
-
-  acquire(&kmem.lock);
-  r = kmem.freelist;
-  if(r)
-    kmem.freelist = r->next;
-  release(&kmem.lock);
-
-  if(r)
-    memset((char*)r, 5, PGSIZE); // fill with junk
-  return (void*)r;
+//  struct run *r;
+//
+//  acquire(&kmem.lock);
+//  r = kmem.freelist;
+//  if(r)
+//    kmem.freelist = r->next;
+//  release(&kmem.lock);
+//
+//  if(r)
+//    memset((char*)r, 5, PGSIZE); // fill with junk
+//  return (void*)r;
+    return new_kalloc();
 }
