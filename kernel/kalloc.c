@@ -13,7 +13,6 @@ void freerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
                    // defined by kernel.ld.
-
 struct run {
   struct run *next;
 };
@@ -23,10 +22,29 @@ struct {
   struct run *freelist;
 } kmem;
 
+struct nkmem{
+    struct spinlock lock;
+    struct run *freelist;
+};
+
+// 定义 NCPU 个kmem
+struct nkmem cpu_kmem[NCPU];
+
+void
+init_kmem_lock() {
+    for(int i = 0; i < NCPU; i++) {
+        char buffer[6];
+        snprintf(buffer, 6, "kmem_%d", i);
+        printf("now is: %s\n", buffer);
+        initlock(&cpu_kmem[i].lock, buffer);
+    }
+}
+
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
+  init_kmem_lock();
   freerange(end, (void*)PHYSTOP);
 }
 
