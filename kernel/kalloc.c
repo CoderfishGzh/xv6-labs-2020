@@ -46,7 +46,7 @@ void
 kinit()
 {
 //  initlock(&kmem.lock, "kmem");
-  init_kmem_lock();
+    init_kmem_lock_and_cnt();
   freerange(end, (void*)PHYSTOP);
 }
 
@@ -110,9 +110,9 @@ steal_freepage() {
             continue;
         }
         // 没有空闲page跳过
-        acquire(cpu_kmem[i].lock);
+        acquire(&cpu_kmem[i].lock);
         if(cpu_kmem[i].free_page_cnt == 0) {
-            release(cpu_kmem[i].lock);
+            release(&cpu_kmem[i].lock);
             continue;
         } else {
             // 找到拥有空闲page的cpu
@@ -128,7 +128,7 @@ steal_freepage() {
         cpu_kmem[target_cpu].freelist = r->next;
     }
 
-    release(cpu_kmem[i].lock);
+    release(&cpu_kmem[target_cpu].lock);
 
     return (void*) r;
 }
