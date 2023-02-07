@@ -95,7 +95,7 @@ kfree(void *pa)
 //  release(&kmem.lock);
 }
 
-void*
+struct run*
 steal_freepage() {
     push_off();
     int my_cpu = cpuid();
@@ -130,7 +130,7 @@ steal_freepage() {
 
     release(&cpu_kmem[target_cpu].lock);
 
-    return (void*) r;
+    return r;
 }
 
 
@@ -155,7 +155,7 @@ new_kalloc(void) {
     } else {
         // 如果 r == 0, 代表没有空闲页
         // 寻找别的cpu的 freelist 是否还有空闲页
-        r = (struct run*)steal_freepage();
+        r = steal_freepage();
     }
     release(&cpu_kmem[cpu_id].lock);
 
