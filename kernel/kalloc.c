@@ -33,6 +33,8 @@ kinit()
 void
 freerange(void *pa_start, void *pa_end)
 {
+  int cpu_id = cpuid();
+  printf("cpu id: %d\n", cpu_id);
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)

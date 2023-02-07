@@ -27,9 +27,9 @@ struct {
   struct spinlock lock;
   struct buf buf[NBUF];
 
-  // Linked list of all buffers, through prev/next.
-  // Sorted by how recently the buffer was used.
-  // head.next is most recent, head.prev is least.
+//所有缓冲区的链表，通过 prev/next。
+  //按最近使用缓冲区的时间排序。
+  //head.next 是最近的，head.prev 是最少的。
   struct buf head;
 } bcache;
 
@@ -39,8 +39,9 @@ binit(void)
   struct buf *b;
 
   initlock(&bcache.lock, "bcache");
-
+  
   // Create linked list of buffers
+  // 初始化 bcache
   bcache.head.prev = &bcache.head;
   bcache.head.next = &bcache.head;
   for(b = bcache.buf; b < bcache.buf+NBUF; b++){
@@ -52,9 +53,9 @@ binit(void)
   }
 }
 
-// Look through buffer cache for block on device dev.
-// If not found, allocate a buffer.
-// In either case, return locked buffer.
+//通过缓冲区缓存查找设备 dev 上的块。
+//如果没有找到，分配一个缓冲区。
+//在任何一种情况下，返回锁定的缓冲区。
 static struct buf*
 bget(uint dev, uint blockno)
 {
