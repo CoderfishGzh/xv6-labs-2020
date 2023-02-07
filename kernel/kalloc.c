@@ -121,14 +121,15 @@ steal_freepage() {
         }
     }
 
-    struct run *r;
+    struct run *r = 0;
     // 将target_cpu的空闲page分配出去
     if(target_cpu != -1) {
         r = cpu_kmem[target_cpu].freelist;
         cpu_kmem[target_cpu].freelist = r->next;
+        release(&cpu_kmem[target_cpu].lock);
+    } else {
+        release(&cpu_kmem[target_cpu + NCPU].lock);
     }
-
-    release(&cpu_kmem[target_cpu].lock);
 
     return r;
 }
