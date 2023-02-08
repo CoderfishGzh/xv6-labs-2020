@@ -95,41 +95,23 @@ kfree(void *pa)
 //  release(&kmem.lock);
 }
 
-struct run*
-steal_freepage() {
+void
+steal_freepage(struct run* r) {
     int my_cpu = cpuid();
 
-    int target_cpu = -1;
-
-    // 自己的cpu不用检查,因为在locking状态，不会有kfree的情况出现
-    for(int i = 0; i < NCPU; i++) {
-        // 如果是自己则跳过
-        if(i == my_cpu) {
+    for(int target_cpu = 0; target_cpu < NCPU; target_cpu++) {
+        if(target_cpu == my_cpu)
             continue;
-        }
-        // 没有空闲page跳过
-        acquire(&cpu_kmem[i].lock);
-        if(cpu_kmem[i].free_page_cnt == 0) {
-            release(&cpu_kmem[i].lock);
-            continue;
-        } else {
-            // 找到拥有空闲page的cpu
-            target_cpu = i;
+        acquire(&cpu_kmem[target_cpu].lock);
+        if(cpu_kmem[target_cpu].free_page_cnt != 0) {
+            r = cpu_kmem[target_cpu].freelist;
+            cpu_kmem[target_cpu].freelist = r->next;
+            cpu_kmem[target_cpu].free_page_cnt--;
+            release(&cpu_kmem[target_cpu].lock);
             break;
         }
-    }
-
-    struct run *r = 0;
-    // 将target_cpu的空闲page分配出去
-    if(target_cpu != -1) {
-        r = cpu_kmem[target_cpu].freelist;
-        cpu_kmem[target_cpu].freelist = r->next;
         release(&cpu_kmem[target_cpu].lock);
-    } else {
-        release(&cpu_kmem[target_cpu + NCPU].lock);
     }
-
-    return r;
 }
 
 // 在cpu id对应的freelist分配内存
@@ -153,7 +135,7 @@ new_kalloc(void) {
     } else {
         // 如果 r == 0, 代表没有空闲页
         // 寻找别的cpu的 freelist 是否还有空闲页
-        r = steal_freepage();
+        steal_freepage(r);
     }
     release(&cpu_kmem[cpu_id].lock);
     pop_off();
