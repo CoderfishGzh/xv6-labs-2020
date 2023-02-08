@@ -85,24 +85,6 @@ kfree(void *pa)
 //  release(&kmem.lock);
 }
 
-void
-steal_freepage(struct run* r) {
-    int my_cpu = cpuid();
-
-    for(int target_cpu = 0; target_cpu < NCPU; target_cpu++) {
-        if(target_cpu == my_cpu)
-            continue;
-        acquire(&cpu_kmem[target_cpu].lock);
-        if(cpu_kmem[target_cpu].free_page_cnt != 0) {
-            r = cpu_kmem[target_cpu].freelist;
-            cpu_kmem[target_cpu].freelist = r->next;
-            release(&cpu_kmem[target_cpu].lock);
-            break;
-        }
-        release(&cpu_kmem[target_cpu].lock);
-    }
-}
-
 // 在cpu id对应的freelist分配内存
 void*
 new_kalloc(void) {
