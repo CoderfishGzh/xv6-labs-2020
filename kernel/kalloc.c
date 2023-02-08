@@ -17,15 +17,8 @@ struct run {
   struct run *next;
 };
 
-//struct {
-//  struct spinlock lock;
-//  struct run *freelist;
-//} kmem;
-
 struct nkmem{
     struct spinlock lock;
-    // 统计 free page cnt
-    int free_page_cnt;
     struct run *freelist;
 };
 
@@ -37,7 +30,6 @@ init_kmem_lock_and_cnt() {
     for(int i = 0; i < NCPU; i++) {
         char buffer[6];
         snprintf(buffer, 6, "kmem_%d", i);
-        cpu_kmem[i].free_page_cnt = 0;
         initlock(&cpu_kmem[i].lock, buffer);
     }
 }
@@ -45,7 +37,6 @@ init_kmem_lock_and_cnt() {
 void
 kinit()
 {
-//  initlock(&kmem.lock, "kmem");
     init_kmem_lock_and_cnt();
   freerange(end, (void*)PHYSTOP);
 }
@@ -85,7 +76,6 @@ kfree(void *pa)
   acquire(&cpu_kmem[cpu_id].lock);
   r->next = cpu_kmem[cpu_id].freelist;
   cpu_kmem[cpu_id].freelist = r;
-  cpu_kmem[cpu_id].free_page_cnt++;
   release(&cpu_kmem[cpu_id].lock);
   pop_off();
 
@@ -106,7 +96,6 @@ steal_freepage(struct run* r) {
         if(cpu_kmem[target_cpu].free_page_cnt != 0) {
             r = cpu_kmem[target_cpu].freelist;
             cpu_kmem[target_cpu].freelist = r->next;
-            cpu_kmem[target_cpu].free_page_cnt--;
             release(&cpu_kmem[target_cpu].lock);
             break;
         }
@@ -131,11 +120,23 @@ new_kalloc(void) {
     if(r) {
         // 如果 r != 0, 代表有空闲页，将 freelist 头移动到下一个位置
         cpu_kmem[cpu_id].freelist = r->next;
-        cpu_kmem[cpu_id].free_page_cnt--;
     } else {
         // 如果 r == 0, 代表没有空闲页
         // 寻找别的cpu的 freelist 是否还有空闲页
-        steal_freepage(r);
+        for(int target_cpu = 0; target_cpu < NCPU; target_cpu++) {
+            if(target_cpu == cpu_id)
+                continue;
+            acquire(&cpu_kmem[target_cpu].lock);
+            r = cpu_kmem[target_cpu].freelist;
+            if(r) {
+                r = cpu_kmem[target_cpu].freelist;
+                cpu_kmem[target_cpu].freelist = r->next;
+                release(&cpu_kmem[target_cpu].lock);
+                break;
+            }
+            release(&cpu_kmem[target_cpu].lock);
+        }
+
     }
     release(&cpu_kmem[cpu_id].lock);
     pop_off();
